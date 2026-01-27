@@ -1,0 +1,220 @@
+<!-- templates/admin_menu.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование меню</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .menu-form {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .menu-form th, .menu-form td {
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #eee;
+        }
+        .menu-form th {
+            background: #f5f7ff;
+            font-weight: 600;
+        }
+        .meal-section {
+            width: 45%;
+        }
+        .meal-section h4 {
+            margin: 0 0 10px 0;
+            color: #4361ee;
+            font-size: 0.95rem;
+        }
+        .meal-fields input {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .ingredients-table {
+            width: 100%;
+            margin-top: 8px;
+            border-collapse: collapse;
+        }
+        .ingredients-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle; /* 🔑 ключевое выравнивание */
+        }
+        .ingredient-input {
+            width: 100%;
+            padding: 4px;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        /* Широкое поле для единицы измерения */
+        .unit-select {
+            width: 50px !important;
+            min-width: 50px;
+            padding: 4px;
+        }
+        .remove-ing-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 6px;
+        }
+        .add-ing-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #4361ee;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .btn-submit {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🛠️ Редактирование школьного меню</h1>
+</header>
+
+<div class="container">
+    <a href="/cook" class="back-link">← Назад в кабинет повара</a>
+
+    <div class="card">
+        <form method="post" class="menu-form" id="menuForm">
+            <table>
+                <thead>
+                    <tr>
+                        <th>День недели</th>
+                        <th>Завтрак</th>
+                        <th>Обед</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                    <tr>
+                        <td><strong>{{ day_names[day] }}</strong></td>
+                        <!-- Завтрак -->
+                        <td class="meal-section">
+                            <h4>Завтрак</h4>
+                            <div class="meal-fields">
+                                <input type="text" name="{{ day }}_breakfast_name" value="{{ meals[day].breakfast.name }}" placeholder="Название блюда">
+                                <input type="number" step="0.01" min="0" name="{{ day }}_breakfast_price" value="{{ meals[day].breakfast.price }}" placeholder="Цена, ₽">
+                            </div>
+                            <table class="ingredients-table" id="ing-table-{{ day }}-breakfast">
+                                {% for ing in meals[day].breakfast.ingredients or [] %}
+                                <tr>
+                                    <td><input type="text" name="{{ day }}_breakfast_ing_name_{{ loop.index0 }}" value="{{ ing.name }}" class="ingredient-input" placeholder="Ингредиент"></td>
+                                    <td><input type="number" name="{{ day }}_breakfast_ing_qty_{{ loop.index0 }}" value="{{ ing.quantity }}" class="ingredient-input" placeholder="Кол-во"></td>
+                                    <td>
+                                        <select name="{{ day }}_breakfast_ing_unit_{{ loop.index0 }}" class="ingredient-input unit-select">
+                                            <option value="г" {% if ing.unit == "г" %}selected{% endif %}>г</option>
+                                            <option value="мл" {% if ing.unit == "мл" %}selected{% endif %}>мл</option>
+                                            <option value="шт" {% if ing.unit == "шт" %}selected{% endif %}>шт</option>
+                                        </select>
+                                    </td>
+                                    <td><button type="button" class="remove-ing-btn" onclick="removeIngredient(this)">✕</button></td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            <button type="button" class="add-ing-btn" onclick="addIngredient('{{ day }}', 'breakfast')">+ Ингредиент</button>
+                        </td>
+                        <!-- Обед -->
+                        <td class="meal-section">
+                            <h4>Обед</h4>
+                            <div class="meal-fields">
+                                <input type="text" name="{{ day }}_lunch_name" value="{{ meals[day].lunch.name }}" placeholder="Название блюда">
+                                <input type="number" step="0.01" min="0" name="{{ day }}_lunch_price" value="{{ meals[day].lunch.price }}" placeholder="Цена, ₽">
+                            </div>
+                            <table class="ingredients-table" id="ing-table-{{ day }}-lunch">
+                                {% for ing in meals[day].lunch.ingredients or [] %}
+                                <tr>
+                                    <td><input type="text" name="{{ day }}_lunch_ing_name_{{ loop.index0 }}" value="{{ ing.name }}" class="ingredient-input" placeholder="Ингредиент"></td>
+                                    <td><input type="number" name="{{ day }}_lunch_ing_qty_{{ loop.index0 }}" value="{{ ing.quantity }}" class="ingredient-input" placeholder="Кол-во"></td>
+                                    <td>
+                                        <select name="{{ day }}_lunch_ing_unit_{{ loop.index0 }}" class="ingredient-input unit-select">
+                                            <option value="г" {% if ing.unit == "г" %}selected{% endif %}>г</option>
+                                            <option value="мл" {% if ing.unit == "мл" %}selected{% endif %}>мл</option>
+                                            <option value="шт" {% if ing.unit == "шт" %}selected{% endif %}>шт</option>
+                                        </select>
+                                    </td>
+                                    <td><button type="button" class="remove-ing-btn" onclick="removeIngredient(this)">✕</button></td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            <button type="button" class="add-ing-btn" onclick="addIngredient('{{ day }}', 'lunch')">+ Ингредиент</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn-submit" style="background: #e67e22;">📤 Отправить админу для подтверждения</button>
+        </form>
+    </div>
+
+    <a href="/logout" class="logout-link">🚪 Выйти</a>
+</div>
+
+<script>
+function addIngredient(day, mealType) {
+    const table = document.getElementById(`ing-table-${day}-${mealType}`);
+    const rowCount = table.querySelectorAll('tr').length;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="text" name="${day}_${mealType}_ing_name_${rowCount}" class="ingredient-input" placeholder="Ингредиент"></td>
+        <td><input type="number" name="${day}_${mealType}_ing_qty_${rowCount}" class="ingredient-input" placeholder="Кол-во"></td>
+        <td>
+            <select name="${day}_${mealType}_ing_unit_${rowCount}" class="ingredient-input unit-select">
+                <option value="г">г</option>
+                <option value="мл">мл</option>
+                <option value="шт">шт</option>
+            </select>
+        </td>
+        <td><button type="button" class="remove-ing-btn" onclick="removeIngredient(this)">✕</button></td>
+    `;
+    table.appendChild(row);
+}
+
+function removeIngredient(button) {
+    const row = button.closest('tr');
+    const table = row.closest('table');
+    row.remove();
+
+    // Переназначаем индексы
+    const rows = table.querySelectorAll('tr');
+    rows.forEach((r, idx) => {
+        const inputs = r.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            const parts = input.name.split('_');
+            parts[parts.length - 1] = idx;
+            input.name = parts.join('_');
+        });
+    });
+}
+</script>
+
+</body>
+</html>

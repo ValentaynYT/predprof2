@@ -1,0 +1,68 @@
+<!-- templates/login.html -->
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 50px; /* ← сдвинуто левее */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Вход в систему</h1>
+</header>
+
+<div class="container">
+    <h2>Авторизация</h2>
+
+    <form method="post">
+        <label>Email</label>
+        <input name="email" required>
+
+        <label>Пароль</label>
+        <div class="password-wrapper">
+            <input name="password" type="password" id="login-password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('login-password')">
+                👁️
+            </button>
+        </div>
+
+        <button>Войти</button>
+    </form>
+</div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.nextElementSibling;
+    if (field.type === "password") {
+        field.type = "text";
+        button.textContent = "🙈";
+    } else {
+        field.type = "password";
+        button.textContent = "👁️";
+    }
+}
+</script>
+
+</body>
+</html>
