@@ -1,0 +1,80 @@
+<!-- templates/register.html -->
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 50px; /* ← сдвинуто левее */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Школьное питание</h1>
+</header>
+
+<div class="container">
+    <h2>Регистрация</h2>
+
+    <form method="post">
+        <label>ФИО</label>
+        <input name="name" required>
+
+        <label>Email</label>
+        <input name="email" type="email" required>
+
+        <label>Пароль</label>
+        <div class="password-wrapper">
+            <input name="password" type="password" id="reg-password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('reg-password')">
+                👁️
+            </button>
+        </div>
+
+        <label>Роль</label>
+        <select name="role">
+            <option value="student">Ученик</option>
+            <option value="cook">Повар</option>
+            <option value="admin">Администратор</option>
+        </select>
+
+        <button>Зарегистрироваться</button>
+    </form>
+
+    <a href="/login">Войти</a>
+</div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.nextElementSibling;
+    if (field.type === "password") {
+        field.type = "text";
+        button.textContent = "🙈";
+    } else {
+        field.type = "password";
+        button.textContent = "👁️";
+    }
+}
+</script>
+
+</body>
+</html>
