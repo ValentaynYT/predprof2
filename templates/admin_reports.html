@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёты — Админка</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        .report-table th,
+        .report-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .report-table th {
+            background: #f0f4ff;
+        }
+        .total-row {
+            font-weight: bold;
+            background: #e8f5e9;
+        }
+        /* Стили для кнопок экспорта */
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .btn-export {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-excel {
+            background: #217346;
+            color: white;
+        }
+        .btn-excel:hover {
+            background: #1a5a37;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(33, 115, 70, 0.3);
+        }
+        .btn-csv {
+            background: #1565c0;
+            color: white;
+        }
+        .btn-csv:hover {
+            background: #0d4a8a;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(21, 101, 192, 0.3);
+        }
+        .btn-png {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-png:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+        .btn-copy {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-copy:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+        }
+        .btn-all {
+            padding: 12px 24px;
+            font-size: 15px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-all-excel {
+            background: #217346;
+            color: white;
+        }
+        .btn-all-excel:hover {
+            background: #1a5a37;
+            box-shadow: 0 4px 12px rgba(33, 115, 70, 0.4);
+        }
+        .btn-all-csv {
+            background: #1565c0;
+            color: white;
+        }
+        .btn-all-csv:hover {
+            background: #0d4a8a;
+            box-shadow: 0 4px 12px rgba(21, 101, 192, 0.4);
+        }
+        /* Гармоничный дизайн секции экспорта */
+        .export-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .export-section h2 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .export-section p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 10px 0 0 0;
+            font-style: italic;
+        }
+        .export-btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+        /* Стили для формы фильтрации */
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .filter-section h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin: 0;
+        }
+        .filter-group input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s;
+        }
+        .filter-group input[type="date"]:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        .filter-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-btn-apply {
+            background: #4361ee;
+            color: white;
+        }
+        .filter-btn-apply:hover {
+            background: #3a56d4;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(67, 97, 238, 0.3);
+        }
+        .filter-btn-reset {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .filter-btn-reset:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
+        }
+        /* Стили для секций отчётов */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Стили для toast-уведомлений */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: white;
+            color: #333;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 280px;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    </style>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>📊 Отчёты за период: {{ start_date }} — {{ end_date }}</h1>
+    </header>
+    <div class="container">
+        <a href="/admin" class="back-link">← Назад в панель администратора</a>
+
+        <!-- Форма фильтрации -->
+        <div class="filter-section">
+            <h3>📅 Выберите период отчёта</h3>
+            <form method="get" class="filter-form">
+                <div class="filter-group">
+                    <label for="start_date">С:</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}" required>
+                </div>
+                <div class="filter-group">
+                    <label for="end_date">По:</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}" required>
+                </div>
+                <button type="submit" class="filter-btn filter-btn-apply">
+                    <span>✓</span> Применить
+                </button>
+                <a href="/admin/reports" class="filter-btn filter-btn-reset">
+                    <span>↺</span> Сбросить
+                </a>
+            </form>
+        </div>
+
+        <!-- Финансовый отчёт -->
+        <div class="card" id="section-revenue">
+            <h2>💰 Финансовый отчёт</h2>
+            <p><strong>Общая выручка:</strong> {{ "%.2f"|format(total_revenue) }} ₽</p>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('revenue-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('revenue-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="exportChart('revenueChart')" class="btn-export btn-png">🖼️ PNG</button>
+                <button onclick="copyTableToClipboard('revenue-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            <table class="report-table" id="revenue-table">
+                <thead>
+                    <tr>
+                        <th>День</th>
+                        <th>Завтраки (₽)</th>
+                        <th>Обеды (₽)</th>
+                        <th>Итого (₽)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                    <tr>
+                        <td>{{ day_names[day] }}</td>
+                        <td>{{ "%.2f"|format(revenue_by_day[day].breakfast) }}</td>
+                        <td>{{ "%.2f"|format(revenue_by_day[day].lunch) }}</td>
+                        <td>{{ "%.2f"|format(revenue_by_day[day].total) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td><strong>Всего</strong></td>
+                        <td><strong>{{ "%.2f"|format(revenue_by_day.values()|sum(attribute='breakfast')) }}</strong></td>
+                        <td><strong>{{ "%.2f"|format(revenue_by_day.values()|sum(attribute='lunch')) }}</strong></td>
+                        <td><strong>{{ "%.2f"|format(total_revenue) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- График выручки -->
+            <canvas id="revenueChart" height="100"></canvas>
+        </div>
+
+        <!-- Затраты на продукты -->
+        <div class="card" id="section-deficit">
+            <h2>🛒 Затраты на закупку продуктов</h2>
+            <p><strong>Расчётная стоимость недостающих ингредиентов:</strong> {{ "%.2f"|format(total_cost_deficit) }} ₽</p>
+            <p><strong>Фактически потрачено на закупки:</strong> {{ "%.2f"|format(total_spent) }} ₽</p>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('deficit-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('deficit-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="copyTableToClipboard('deficit-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            {% if deficit_details %}
+            <table class="report-table" id="deficit-table">
+                <thead>
+                    <tr>
+                        <th>Продукт</th>
+                        <th>Нужно</th>
+                        <th>Есть</th>
+                        <th>Дефицит</th>
+                        <th>Стоимость (₽)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in deficit_details %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ "%.1f"|format(item.needed) }} {{ item.unit }}</td>
+                        <td>{{ "%.1f"|format(item.current) }} {{ item.unit }}</td>
+                        <td style="color: #e74c3c;"><strong>{{ "%.1f"|format(item.deficit) }} {{ item.unit }}</strong></td>
+                        <td>{{ "%.2f"|format(item.cost) }} ₽</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Все продукты в наличии — закупка не требуется.</p>
+            {% endif %}
+        </div>
+
+        <!-- Фактическое использование продуктов -->
+        <div class="card" id="section-usage">
+            <h2>📋 Фактическое использование продуктов</h2>
+            <p><strong>Общая стоимость списанных продуктов:</strong> {{ "%.2f"|format(total_usage_cost) }} ₽</p>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('usage-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('usage-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="copyTableToClipboard('usage-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            {% if usage_list %}
+            <table class="report-table" id="usage-table">
+                <thead>
+                    <tr>
+                        <th>Продукт</th>
+                        <th>Использовано</th>
+                        <th>Стоимость (₽)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in usage_list %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ "%.1f"|format(item.fact_qty) }} {{ item.unit }}</td>
+                        <td>{{ "%.2f"|format(item.fact_cost) }} ₽</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Нет данных о выданных блюдах.</p>
+            {% endif %}
+        </div>
+
+        <!-- План vs Факт -->
+        <div class="card" id="section-plan-vs-fact">
+            <h2>📊 План vs Факт по продуктам</h2>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('planvsfact-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('planvsfact-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="exportChart('planVsFactChart')" class="btn-export btn-png">🖼️ PNG</button>
+                <button onclick="copyTableToClipboard('planvsfact-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            {% if plan_vs_fact %}
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 16px;">
+                <table class="report-table" id="planvsfact-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: #f0f4ff; z-index: 10;">
+                        <tr>
+                            <th>Продукт</th>
+                            <th>План</th>
+                            <th>Факт</th>
+                            <th>Откл. (ед.)</th>
+                            <th>Откл. (₽)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in plan_vs_fact %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ "%.1f"|format(item.plan_qty) }} {{ item.unit }}</td>
+                            <td>{{ "%.1f"|format(item.fact_qty) }} {{ item.unit }}</td>
+                            <td style="color: {% if item.deviation_qty > 0 %}#e74c3c{% elif item.deviation_qty < 0 %}#2ecc71{% else %}#666{% endif %};">
+                                {{ "%.1f"|format(item.deviation_qty) }} {{ item.unit }}
+                            </td>
+                            <td style="color: {% if item.deviation_cost > 0 %}#e74c3c{% elif item.deviation_cost < 0 %}#2ecc71{% else %}#666{% endif %};">
+                                {{ "%.2f"|format(item.deviation_cost) }} ₽
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>Нет данных для сравнения.</p>
+            {% endif %}
+            <!-- Переключатель единиц измерения -->
+            <div style="display: flex; justify-content: center; gap: 24px; margin: 16px 0; font-weight: 500;">
+                <label style="display: flex; align-items: center; gap: 6px;">
+                    <input type="radio" name="unit-mode" value="qty" checked onchange="updatePlanVsFactChart()">
+                    Ед. изм.
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px;">
+                    <input type="radio" name="unit-mode" value="cost" onchange="updatePlanVsFactChart()">
+                    ₽
+                </label>
+            </div>
+            <!-- График план/факт (топ-10 продуктов) -->
+            <canvas id="planVsFactChart" height="200"></canvas>
+        </div>
+
+        <!-- Посещаемость -->
+        <div class="card" id="section-attendance">
+            <h2>👥 Посещаемость (выдано)</h2>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('attendance-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('attendance-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="exportChart('attendanceChart')" class="btn-export btn-png">🖼️ PNG</button>
+                <button onclick="copyTableToClipboard('attendance-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            <table class="report-table" id="attendance-table">
+                <thead>
+                    <tr>
+                        <th>День</th>
+                        <th>Завтраки</th>
+                        <th>Обеды</th>
+                        <th>Всего</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in days %}
+                    <tr>
+                        <td>{{ day_names[day] }}</td>
+                        <td>{{ attendance_by_day[day].breakfast }}</td>
+                        <td>{{ attendance_by_day[day].lunch }}</td>
+                        <td>{{ attendance_by_day[day].total }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td><strong>Итого</strong></td>
+                        <td><strong>{{ attendance_by_day.values()|sum(attribute='breakfast') }}</strong></td>
+                        <td><strong>{{ attendance_by_day.values()|sum(attribute='lunch') }}</strong></td>
+                        <td><strong>{{ attendance_by_day.values()|sum(attribute='total') }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- График посещаемости -->
+            <canvas id="attendanceChart" height="100"></canvas>
+        </div>
+
+        <!-- Ручные списания -->
+        <div class="card" id="section-writeoffs">
+            <h2>🗑️ Ручные списания (порча, ошибка)</h2>
+            <p><strong>Общая стоимость списаний:</strong> {{ "%.2f"|format(total_manual_cost) }} ₽</p>
+            <div class="export-buttons">
+                <button onclick="exportTableToExcel('writeoffs-table')" class="btn-export btn-excel">📊 Excel</button>
+                <button onclick="exportTableToCSV('writeoffs-table')" class="btn-export btn-csv">📄 CSV</button>
+                <button onclick="copyTableToClipboard('writeoffs-table')" class="btn-export btn-copy">📋 Копировать</button>
+            </div>
+            {% if manual_write_offs %}
+            <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
+                <table class="report-table" id="writeoffs-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: #fff8e1;">
+                        <tr>
+                            <th>Продукт</th>
+                            <th>Кол-во</th>
+                            <th>Причина</th>
+                            <th>Повар</th>
+                            <th>Дата</th>
+                            <th>Стоимость (₽)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in manual_write_offs %}
+                        <tr>
+                            <td>{{ w.product }}</td>
+                            <td>{{ "%.1f"|format(w.quantity) }} {{ w.unit }}</td>
+                            <td>{{ w.reason }}</td>
+                            <td>{{ w.cook_name }}</td>
+                            <td>{{ w.date }}</td>
+                            <td>{{ "%.2f"|format(w.cost) }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>Нет ручных списаний.</p>
+            {% endif %}
+        </div>
+
+        <!-- Кнопка экспорта всего отчёта -->
+        <div class="export-section">
+            <h2>📤 Экспорт полного отчёта</h2>
+            <p>Скачайте все данные одним файлом для удобного анализа и архивирования</p>
+            <div class="export-btn-group">
+                <button onclick="exportAllToExcel()" class="btn-all btn-all-excel">
+                    <span>📊</span> Весь отчёт в Excel
+                </button>
+                <button onclick="exportAllToCSV()" class="btn-all btn-all-csv">
+                    <span>📄</span> Весь отчёт в CSV
+                </button>
+            </div>
+        </div>
+
+        <a href="/logout" class="logout-link">🚪 Выйти</a>
+    </div>
+
+    <script>
+        // === Глобальные переменные ===
+        let revenueChart = null;
+        let attendanceChart = null;
+        let planVsFactChart = null;
+
+        // === Выручка ===
+        document.addEventListener('DOMContentLoaded', function() {
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ chart_days|tojson }},
+                    datasets: [{
+                        label: 'Выручка (₽)',
+                        data: {{ chart_revenue|tojson }},
+                        backgroundColor: '#4361ee'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // === Посещаемость ===
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            attendanceChart = new Chart(attendanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ chart_days|tojson }},
+                    datasets: [
+                        {
+                            label: 'Завтраки',
+                            data: {{ chart_breakfasts|tojson }},
+                            backgroundColor: '#2ecc71'
+                        },
+                        {
+                            label: 'Обеды',
+                            data: {{ chart_lunches|tojson }},
+                            backgroundColor: '#e74c3c'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+
+            // === План vs Факт ===
+            const planVsFactData = {{ top_10_plan_vs_fact|tojson }};
+            createOrUpdatePlanVsFactChart('qty');
+        });
+
+        function createOrUpdatePlanVsFactChart(mode = 'qty') {
+            const ctx = document.getElementById('planVsFactChart').getContext('2d');
+            if (planVsFactChart) planVsFactChart.destroy();
+
+            const planVsFactData = {{ top_10_plan_vs_fact|tojson }};
+            const labels = planVsFactData.map(item => item.name);
+            let planData, factData;
+
+            if (mode === 'cost') {
+                planData = planVsFactData.map(item => item.plan_cost);
+                factData = planVsFactData.map(item => item.fact_cost);
+            } else {
+                planData = planVsFactData.map(item => item.plan_qty);
+                factData = planVsFactData.map(item => item.fact_qty);
+            }
+
+            planVsFactChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'План',
+                            data: planData,
+                            backgroundColor: '#3498db'
+                        },
+                        {
+                            label: 'Факт',
+                            data: factData,
+                            backgroundColor: '#e67e22'
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: {
+                        x: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: true }
+                    }
+                }
+            });
+        }
+
+        function updatePlanVsFactChart() {
+            const mode = document.querySelector('input[name="unit-mode"]:checked').value;
+            createOrUpdatePlanVsFactChart(mode);
+        }
+
+        // === Экспорт таблицы в Excel ===
+        function exportTableToExcel(tableId, filenamePrefix = '') {
+            const table = document.getElementById(tableId);
+            if (!table || !table.querySelector('tbody tr')) {
+                showToast('❌ Таблица не найдена или пуста!');
+                return;
+            }
+
+            // Конвертируем таблицу в лист
+            const ws = XLSX.utils.table_to_sheet(table, {
+                raw: true,
+                dateNF: 'dd/mm/yyyy'
+            });
+
+            // Автоширина столбцов
+            const wscols = [];
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                let maxWidth = 10;
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const cellAddress = { c: C, r: R };
+                    const cellRef = XLSX.utils.encode_cell(cellAddress);
+                    const cell = ws[cellRef];
+                    if (cell && cell.v) {
+                        const cellValue = String(cell.v);
+                        maxWidth = Math.max(maxWidth, cellValue.length);
+                    }
+                }
+                wscols.push({ wch: Math.min(maxWidth + 2, 30) });
+            }
+            ws['!cols'] = wscols;
+
+            // Создаём рабочую книгу
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Отчёт');
+
+            // Формируем имя файла
+            const prefix = filenamePrefix || tableId;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const filename = `${prefix}_${dateStr}.xlsx`;
+
+            // Сохраняем файл
+            XLSX.writeFile(wb, filename);
+            showToast('✅ Таблица экспортирована в Excel!');
+        }
+
+        // === Экспорт таблицы в CSV ===
+        function exportTableToCSV(tableId, filenamePrefix = '') {
+            const table = document.getElementById(tableId);
+            if (!table || !table.querySelector('tbody tr')) {
+                showToast('❌ Таблица не найдена или пуста!');
+                return;
+            }
+
+            const rows = table.querySelectorAll('tr');
+            let csvContent = '';
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('th, td');
+                const rowData = Array.from(cols).map(col => {
+                    let text = col.innerText.trim().replace(/\n/g, ' ');
+                    if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }
+                    return text;
+                });
+                csvContent += rowData.join(',') + '\n';
+            });
+
+            const blob = new Blob(['\ufeff' + csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            const prefix = filenamePrefix || tableId;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const filename = `${prefix}_${dateStr}.csv`;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            showToast('✅ Таблица экспортирована в CSV!');
+        }
+
+        // === Копирование таблицы в буфер обмена ===
+        function copyTableToClipboard(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) {
+                showToast('❌ Таблица не найдена!');
+                return;
+            }
+
+            const rows = table.querySelectorAll('tr');
+            let textContent = '';
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('th, td');
+                const rowData = Array.from(cols).map(col => col.innerText.trim());
+                textContent += rowData.join('\t') + '\n';
+            });
+
+            navigator.clipboard.writeText(textContent).then(() => {
+                showToast('📋 Таблица скопирована в буфер обмена!');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+                showToast('❌ Не удалось скопировать в буфер обмена');
+            });
+        }
+
+        // === Экспорт графика в PNG ===
+        function exportChart(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                showToast('❌ График не найден!');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = `${canvasId}_${new Date().toISOString().slice(0, 10)}.png`;
+
+            // Создаём временный canvas с белым фоном
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width || 800;
+            tempCanvas.height = canvas.height || 400;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Заливаем белым фоном
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            // Рисуем оригинальный canvas поверх белого фона
+            ctx.drawImage(canvas, 0, 0);
+
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+            showToast('✅ График сохранён как PNG!');
+        }
+
+        // === Экспорт ВСЕГО отчёта в Excel ===
+        function exportAllToExcel() {
+            const wb = XLSX.utils.book_new();
+            let exportedCount = 0;
+            let skippedCount = 0;
+
+            const tables = [
+                { id: 'revenue-table', name: 'Финансы' },
+                { id: 'deficit-table', name: 'Дефицит_продуктов' },
+                { id: 'usage-table', name: 'Использование' },
+                { id: 'planvsfact-table', name: 'План_vs_Факт' },
+                { id: 'attendance-table', name: 'Посещаемость' },
+                { id: 'writeoffs-table', name: 'Списания' }
+            ];
+
+            tables.forEach(tableInfo => {
+                const table = document.getElementById(tableInfo.id);
+                if (table && table.querySelector('tbody tr')) {
+                    try {
+                        const ws = XLSX.utils.table_to_sheet(table, {
+                            raw: true,
+                            dateNF: 'dd/mm/yyyy'
+                        });
+
+                        // Автоширина столбцов
+                        const wscols = [];
+                        const range = XLSX.utils.decode_range(ws['!ref']);
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                            let maxWidth = 10;
+                            for (let R = range.s.r; R <= range.e.r; ++R) {
+                                const cellAddress = { c: C, r: R };
+                                const cellRef = XLSX.utils.encode_cell(cellAddress);
+                                const cell = ws[cellRef];
+                                if (cell && cell.v) {
+                                    const cellValue = String(cell.v);
+                                    maxWidth = Math.max(maxWidth, cellValue.length);
+                                }
+                            }
+                            wscols.push({ wch: Math.min(maxWidth + 2, 30) });
+                        }
+                        ws['!cols'] = wscols;
+
+                        const sheetName = tableInfo.name.substring(0, 31);
+                        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                        exportedCount++;
+                    } catch (e) {
+                        console.error(`Ошибка при экспорте ${tableInfo.id}:`, e);
+                        skippedCount++;
+                    }
+                } else {
+                    skippedCount++;
+                }
+            });
+
+            if (exportedCount === 0) {
+                showToast('❌ Нет таблиц для экспорта!');
+                return;
+            }
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const period = '{{ start_date }}_{{ end_date }}'.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const filename = `Полный_отчёт_${period}_${dateStr}.xlsx`;
+
+            XLSX.writeFile(wb, filename);
+
+            let message = `✅ Экспортировано ${exportedCount} таблиц в Excel!`;
+            if (skippedCount > 0) {
+                message += ` (${skippedCount} пропущено)`;
+            }
+            showToast(message);
+        }
+
+        // === Экспорт ВСЕГО отчёта в один CSV файл ===
+        function exportAllToCSV() {
+            let allContent = '';
+            let exportedCount = 0;
+
+            const tables = [
+                { id: 'revenue-table', title: 'ФИНАНСОВЫЙ ОТЧЁТ' },
+                { id: 'deficit-table', title: 'ЗАТРАТЫ НА ЗАКУПКУ ПРОДУКТОВ' },
+                { id: 'usage-table', title: 'ФАКТИЧЕСКОЕ ИСПОЛЬЗОВАНИЕ ПРОДУКТОВ' },
+                { id: 'planvsfact-table', title: 'ПЛАН VS ФАКТ ПО ПРОДУКТАМ' },
+                { id: 'attendance-table', title: 'ПОСЕЩАЕМОСТЬ' },
+                { id: 'writeoffs-table', title: 'РУЧНЫЕ СПИСАНИЯ' }
+            ];
+
+            tables.forEach(tableInfo => {
+                const table = document.getElementById(tableInfo.id);
+                if (table && table.querySelector('tbody tr')) {
+                    allContent += `\n===== ${tableInfo.title} =====\n\n`;
+                    const rows = table.querySelectorAll('tr');
+                    rows.forEach(row => {
+                        const cols = row.querySelectorAll('th, td');
+                        const rowData = Array.from(cols).map(col => {
+                            let text = col.innerText.trim().replace(/\n/g, ' ');
+                            if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                                text = '"' + text.replace(/"/g, '""') + '"';
+                            }
+                            return text;
+                        });
+                        allContent += rowData.join(',') + '\n';
+                    });
+                    exportedCount++;
+                }
+            });
+
+            if (!allContent || exportedCount === 0) {
+                showToast('❌ Нет данных для экспорта!');
+                return;
+            }
+
+            const blob = new Blob(['\ufeff' + allContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const period = '{{ start_date }}_{{ end_date }}'.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const filename = `Полный_отчёт_${period}_${dateStr}.csv`;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+
+            showToast(`✅ Экспортировано ${exportedCount} таблиц в CSV!`);
+        }
+
+        // === Всплывающее уведомление ===
+        function showToast(message) {
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                `;
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderLeft = `4px solid ${message.includes('✅') ? '#28a745' : message.includes('❌') ? '#dc3545' : '#6c757d'}`;
+            toast.innerHTML = message;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    toast.remove();
+                    if (toastContainer.children.length === 0) {
+                        toastContainer.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

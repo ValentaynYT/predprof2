@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Редактировать ученика{% endblock %}
+{% block header_title %}✏️ Редактировать профиль ученика{% endblock %}
+{% block extra_css %}
+<style>
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2b2d42;
+}
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.form-input:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.checkbox-group input {
+    width: auto;
+    margin: 0;
+}
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+.btn-save {
+    flex: 1;
+    padding: 12px;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.btn-save:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+.btn-cancel {
+    flex: 1;
+    padding: 12px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+.flash-message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+}
+.flash-success { background: #2ecc71; }
+.flash-error { background: #e74c3c; }
+.flash-info { background: #3498db; }
+.flash-warning { background: #f39c12; }
+</style>
+{% endblock %}
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="form-container">
+    <a href="/admin/students" class="back-link">← Назад к списку учеников</a>
+
+    <div class="card">
+        <h2>Данные ученика</h2>
+        <p style="color: #6c757d; margin-bottom: 24px;">
+            ID: <strong>{{ student.id }}</strong> | Зарегистрирован:
+            <strong>{{ student.timestamp.strftime('%d.%m.%Y %H:%M') if student.timestamp else '—' }}</strong>
+        </p>
+
+        <form method="post">
+            <div class="form-group">
+                <label class="form-label">ФИО *</label>
+                <input
+                    type="text"
+                    name="full_name"
+                    value="{{ student.full_name }}"
+                    class="form-input"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input
+                    type="email"
+                    name="email"
+                    value="{{ student.email }}"
+                    class="form-input"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Класс</label>
+                <input
+                    type="text"
+                    name="class_name"
+                    value="{{ student.class_name }}"
+                    class="form-input"
+                    placeholder="Например: 5А, 10Б"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Баланс (₽)</label>
+                <input
+                    type="number"
+                    name="balance"
+                    value="{{ "%.2f"|format(student.balance) }}"
+                    class="form-input"
+                    step="0.01"
+                    min="0"
+                >
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn-save">💾 Сохранить изменения</button>
+                <button type="button" class="btn-cancel" onclick="window.location.href='/admin/students'">
+                    ✖️ Отменить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

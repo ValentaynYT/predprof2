@@ -1,0 +1,941 @@
+{% extends "base.html" %}
+{% block title %}Гибкий абонемент{% endblock %}
+{% block header_title %}💳 Гибкий абонемент{% endblock %}
+{% block extra_css %}
+<style>
+.subscription-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #f0f4ff;
+    border: 1px solid #e0e6ff;
+}
+
+.back-link:hover {
+    background: #e0e8ff;
+    text-decoration: none;
+}
+
+/* Flash-сообщения */
+.flash-message {
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.flash-success { background: #2ecc71; }
+.flash-error { background: #e74c3c; }
+.flash-info { background: #3498db; }
+.flash-warning { background: #f39c12; }
+
+/* Активный абонемент */
+.active-sub-card {
+    background: #e3f2fd;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #bbdefb;
+}
+
+.active-sub-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1976d2;
+    margin-bottom: 16px;
+}
+
+.sub-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+}
+
+.sub-detail span {
+    color: #666;
+}
+
+.sub-detail strong {
+    font-weight: 600;
+    color: #1976d2;
+}
+
+/* Предупреждение */
+.warning-card {
+    background: #fff8e1;
+    border-left: 4px solid #ffc107;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.warning-card p {
+    margin: 0;
+    color: #856404;
+    font-size: 1rem;
+}
+
+/* Выбор периода */
+.period-select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    background: white;
+}
+
+.period-select:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+/* Настройка по дням */
+.day-config-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e9ecef;
+}
+
+.day-config-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.day-row {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #4361ee;
+}
+
+.day-row:hover {
+    background: #e8f4ff;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #2b2d42;
+    flex: 1;
+    font-size: 1.1rem;
+}
+
+.meal-toggle {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.toggle-label {
+    font-size: 0.95rem;
+    color: #495057;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #4361ee;
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* Итоговая стоимость */
+.price-card {
+    background: #e8f5e9;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #c8e6c9;
+}
+
+.price-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 16px;
+}
+
+.total-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 12px 0;
+    color: #1b5e20;
+}
+
+.meal-count {
+    font-size: 1.2rem;
+    color: #388e3c;
+    margin-top: 8px;
+}
+
+/* Детали расчёта */
+.calculation-details {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #c8e6c9;
+}
+
+.calc-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 6px;
+}
+
+.calc-detail strong {
+    font-weight: 600;
+}
+
+/* Кнопка оплаты */
+.btn-pay {
+    width: 100%;
+    padding: 14px 20px;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.btn-pay:hover {
+    background: #27ae60;
+}
+
+.btn-pay:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .day-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .meal-toggle {
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .total-price {
+        font-size: 2rem;
+    }
+
+    .btn-pay {
+        font-size: 1rem;
+        padding: 12px;
+    }
+}
+/* Итоговая стоимость */
+.price-card {
+    background: #e8f5e9;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #c8e6c9;
+}
+
+.price-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 16px;
+}
+
+.total-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 12px 0;
+    color: #1b5e20;
+}
+
+.meal-count {
+    font-size: 1.2rem;
+    color: #388e3c;
+    margin-top: 8px;
+}
+
+/* Детали расчёта */
+.calculation-details {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #a5d6a7;
+}
+
+.calc-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    font-size: 1rem;
+}
+
+.calc-detail span {
+    color: #546e7a;
+    font-weight: 500;
+}
+
+.calc-detail strong {
+    font-weight: 700;
+    color: #1b5e20;
+}
+
+/* Секция деталей по дням */
+.calc-detail-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.calc-detail-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #546e7a;
+    margin-bottom: 12px;
+}
+
+.day-price-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 3px solid #4caf50;
+    font-size: 0.95rem;
+}
+
+.day-price-detail span:first-child {
+    color: #424242;
+    font-weight: 500;
+}
+
+.day-price-detail span:last-child {
+    color: #1b5e20;
+    font-weight: 600;
+}
+
+/* ===== ЕДИНЫЙ ВЫПАДАЮЩИЙ СПИСОК ДЕТАЛЕЙ ===== */
+
+.details-toggle {
+    margin-top: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #546e7a;
+}
+
+.details-header:hover {
+    background: #e8f4ff;
+}
+
+/* ===== СКРОЛЛИРУЕМЫЙ ВЫПАДАЮЩИЙ СПИСОК ДЕТАЛЕЙ ===== */
+
+.details-content {
+    padding: 16px 20px;
+    background: white;
+    max-height: 300px; /* Фиксированная высота для прокрутки */
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    display: none; /* Скрыто по умолчанию */
+    scrollbar-width: thin; /* Тонкая полоса прокрутки (для Firefox) */
+    scrollbar-color: #b0b0b0 #f0f0f0; /* Цвет полосы прокрутки */
+}
+
+/* Стили для полосы прокрутки (для WebKit-браузеров) */
+.details-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.details-content::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.details-content::-webkit-scrollbar-thumb {
+    background: #b0b0b0;
+    border-radius: 4px;
+}
+
+.details-content::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* Детали по дням */
+.day-detail {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #4caf50;
+}
+
+.meal-detail {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #4caf50;
+}
+
+.breakfast-detail {
+    background: #f0f8ff;
+    border-left-color: #2196f3;
+}
+
+.lunch-detail {
+    background: #fff0f0;
+    border-left-color: #f44336;
+}
+
+.meal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.meal-type {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+/* Убираем обрезание текста для названий блюд */
+.meal-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #546e7a;
+    max-width: 100%; /* Полная ширина */
+    white-space: normal; /* Разрешаем перенос строк */
+    overflow: visible; /* Убираем обрезание */
+    text-overflow: clip; /* Отключаем многоточие */
+}
+
+.meal-price {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #2e7d32;
+}
+
+.meal-ingredients {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+    color: #546e7a;
+}
+
+.meal-ingredients ul {
+    margin: 6px 0 0 16px;
+    padding-left: 0;
+    list-style-type: none;
+}
+
+.meal-ingredients li {
+    margin-bottom: 3px;
+    line-height: 1.4;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash-message flash-{{ category if category in ['success', 'error', 'info', 'warning'] else 'info' }}">
+    {% if category == 'success' %}✅{% elif category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<a href="/student" class="back-link">← Назад в кабинет ученика</a>
+
+<div class="subscription-container">
+    {% if active_sub %}
+    <div class="active-sub-card">
+        <div class="active-sub-title">✅ У вас есть активный гибкий абонемент</div>
+        <div class="sub-detail">
+            <span>📅 Период действия:</span>
+            <strong>{{ active_sub.days_count }} дней</strong>
+        </div>
+        <div class="sub-detail">
+            <span>🍽️ Всего приёмов пищи:</span>
+            <strong>{{ active_sub.total_meals }}</strong>
+        </div>
+        <div class="sub-detail">
+            <span>💰 Общая стоимость:</span>
+            <strong>{{ "%.2f"|format(active_sub.total_price) }} ₽</strong>
+        </div>
+        <div class="sub-detail">
+            <span>⏰ Действует до:</span>
+            <strong>{{ active_sub.expires_at.strftime('%d.%m.%Y') }}</strong>
+        </div>
+    </div>
+
+    <div class="warning-card">
+        <p>⚠️ Чтобы приобрести новый гибкий абонемент, дождитесь окончания текущего или обратитесь к администратору.</p>
+    </div>
+    {% else %}
+    <h2 style="text-align: center; margin-bottom: 24px; color: #2c3e50;">💳 Гибкий абонемент</h2>
+
+    <div class="warning-card">
+        <p>ℹ️ Гибкий абонемент позволяет выбрать конкретные дни и приёмы пищи на нужный период. Вы платите только за то, что заказываете!</p>
+    </div>
+
+    <!-- Выбор периода -->
+    <label for="subscription-period" style="display: block; margin-bottom: 10px; font-weight: 600; font-size: 1rem; color: #2c3e50;">
+        📅 Выберите период действия:
+    </label>
+    <select id="subscription-period" class="period-select">
+        <option value="5">1 неделя (5 дней)</option>
+        <option value="10" selected>2 недели (10 дней)</option>
+        <option value="15">3 недели (15 дней)</option>
+        <option value="20">4 недели (20 дней)</option>
+    </select>
+
+    <!-- Настройка по дням недели -->
+    <div class="day-config-card">
+        <div class="day-config-title">🍽️ Настройте питание по дням:</div>
+
+        <div id="subscription-days-config">
+            <!-- Будет заполнено через JavaScript -->
+        </div>
+    </div>
+
+    <!-- Итоговая стоимость -->
+<div class="price-card">
+    <div class="price-title">💰 К оплате:</div>
+    <div class="total-price">
+        <span id="subscription-total-price">0.00</span> ₽
+    </div>
+    <div class="meal-count">
+        <span id="subscription-total-count">0</span> приёмов пищи
+    </div>
+
+    <!-- Детали расчёта -->
+    <div class="calculation-details">
+        <div class="calc-detail">
+            <span>📅 Период:</span>
+            <strong id="subscription-period-detail">2 недели</strong>
+        </div>
+        <div class="calc-detail">
+            <span>🍽️ Приёмов в неделю:</span>
+            <strong id="subscription-weekly-meals">0</strong>
+        </div>
+        <div class="calc-detail">
+            <span>💰 Стоимость за неделю:</span>
+            <strong id="subscription-weekly-price">0.00 ₽</strong>
+        </div>
+
+        <!-- Детали по дням -->
+        <div class="calc-detail-section">
+            <div id="price-details">
+                <!-- Будет заполнено через JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Кнопка оплаты -->
+    <form id="subscription-form" method="post" action="/student/subscription/flexible/purchase">
+        <input type="hidden" name="days_count" id="days-count-input" value="10">
+        <input type="hidden" name="days_config" id="days-config-input" value='{"monday": {"breakfast": true, "lunch": true}, "tuesday": {"breakfast": true, "lunch": true}, "wednesday": {"breakfast": true, "lunch": true}, "thursday": {"breakfast": true, "lunch": true}, "friday": {"breakfast": true, "lunch": true}}'>
+        <input type="hidden" name="total_price" id="total-price-input" value="0">
+        <button type="submit" id="pay-subscription-btn" class="btn-pay" disabled>
+            💳 Оплатить абонемент
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const days = [
+    { key: 'monday', name: 'Понедельник', emoji: '📅' },
+    { key: 'tuesday', name: 'Вторник', emoji: '📅' },
+    { key: 'wednesday', name: 'Среда', emoji: '📅' },
+    { key: 'thursday', name: 'Четверг', emoji: '📅' },
+    { key: 'friday', name: 'Пятница', emoji: '📅' }
+];
+
+const defaultConfig = {
+    monday: { breakfast: true, lunch: true },
+    tuesday: { breakfast: true, lunch: true },
+    wednesday: { breakfast: true, lunch: true },
+    thursday: { breakfast: true, lunch: true },
+    friday: { breakfast: true, lunch: true }
+};
+
+let currentConfig = JSON.parse(JSON.stringify(defaultConfig));
+let currentTotalPrice = 0;
+let currentMealCount = 0;
+
+// Инициализация интерфейса
+function initSubscriptionUI() {
+    renderDayConfig();
+    calculatePrice();
+}
+
+// Отрисовка настроек дней
+function renderDayConfig() {
+    const container = document.getElementById('subscription-days-config');
+    container.innerHTML = '';
+
+    days.forEach(day => {
+        const dayRow = document.createElement('div');
+        dayRow.className = 'day-row';
+        dayRow.innerHTML = `
+            <div class="day-name">${day.emoji} ${day.name}</div>
+            <div class="meal-toggle">
+                <label class="toggle-label">🕗 Завтрак</label>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           data-day="${day.key}"
+                           data-meal="breakfast"
+                           ${currentConfig[day.key].breakfast ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+
+                <label class="toggle-label" style="margin-left: 32px;">🕐 Обед</label>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           data-day="${day.key}"
+                           data-meal="lunch"
+                           ${currentConfig[day.key].lunch ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        `;
+        container.appendChild(dayRow);
+    });
+
+    // Добавляем обработчики событий
+    document.querySelectorAll('.toggle-switch input').forEach(checkbox => {
+        checkbox.addEventListener('change', handleToggleChange);
+    });
+}
+
+// Обработчик изменения переключателя
+function handleToggleChange(e) {
+    const day = e.target.getAttribute('data-day');
+    const meal = e.target.getAttribute('data-meal');
+    const isChecked = e.target.checked;
+
+    currentConfig[day][meal] = isChecked;
+
+    // Пересчитываем сразу при изменении
+    calculatePrice();
+}
+
+// Расчёт стоимости
+function calculatePrice() {
+    const daysCount = parseInt(document.getElementById('subscription-period').value);
+    const periodText = document.getElementById('subscription-period').options[
+        document.getElementById('subscription-period').selectedIndex
+    ].text;
+
+    // === ПРОВЕРКА: ЕСТЬ ЛИ ВЫБРАННЫЕ ПРИЁМЫ ПИЩИ ===
+    let hasSelectedMeals = false;
+    for (const day in currentConfig) {
+        if (currentConfig[day].breakfast || currentConfig[day].lunch) {
+            hasSelectedMeals = true;
+            break;
+        }
+    }
+
+    // Если нет выбранных приёмов - не отправляем запрос
+    if (!hasSelectedMeals) {
+        document.getElementById('subscription-total-price').textContent = '0.00';
+        document.getElementById('subscription-total-count').textContent = '0';
+        document.getElementById('pay-subscription-btn').disabled = true;
+        document.getElementById('price-details').innerHTML = '<p style="color: #999; text-align: center; padding: 16px;">Выберите дни для отображения деталей</p>';
+        return;
+    }
+
+    fetch('/api/flexible-subscription/calculate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            days_count: daysCount,
+            days_config: currentConfig
+        })
+    })
+    .then(response => {
+        // Проверяем статус ответа
+        if (!response.ok) {
+            throw new Error('Сервер вернул ошибку: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            currentTotalPrice = data.total_price;
+            currentMealCount = data.meal_count;
+
+            // Общая стоимость
+            document.getElementById('subscription-total-price').textContent = currentTotalPrice.toFixed(2);
+            document.getElementById('subscription-total-count').textContent = currentMealCount;
+
+            // Детали расчёта
+            document.getElementById('subscription-period-detail').textContent = periodText;
+
+            // Приёмы в неделю - считаем напрямую из конфигурации
+            let weeklyMeals = 0;
+            for (const day in currentConfig) {
+                if (currentConfig[day].breakfast) weeklyMeals++;
+                if (currentConfig[day].lunch) weeklyMeals++;
+            }
+            document.getElementById('subscription-weekly-meals').textContent = weeklyMeals;
+
+            // Стоимость за неделю — берём напрямую из ответа сервера
+            const weeklyPrice = data.total_price / data.weeks_count;
+            document.getElementById('subscription-weekly-price').textContent = weeklyPrice.toFixed(2) + ' ₽';
+
+            // === ОБНОВЛЁННЫЙ БЛОК: ЕДИНЫЙ ВЫПАДАЮЩИЙ СПИСОК ДЕТАЛЕЙ ===
+            const priceDetails = document.getElementById('price-details');
+            if (priceDetails && data.meal_details && data.selected_meals) {
+                // Собираем детали всех дней
+                let daysDetailsHTML = '';
+                days.forEach(day => {
+                    const selected = data.selected_meals[day.key];
+                    const mealInfo = data.meal_details[day.key];
+
+                    if (selected && (selected.breakfast || selected.lunch)) {
+                        daysDetailsHTML += `
+                            <div class="day-detail">
+                                <div style="font-weight: 700; margin: 12px 0 8px; display: flex; justify-content: space-between;">
+                                    <span>${day.name}</span>
+                                    <span style="color: #2e7d32; font-weight: 600;">${(selected.breakfast_price + selected.lunch_price).toFixed(2)} ₽</span>
+                                </div>
+                        `;
+
+                        // Завтрак
+                        if (selected.breakfast && mealInfo.breakfast) {
+                            const breakfast = mealInfo.breakfast;
+                            daysDetailsHTML += `
+                                <div class="meal-detail breakfast-detail">
+                                    <div class="meal-header">
+                                        <span class="meal-type">🕗 Завтрак</span>
+                                        <span class="meal-name">${breakfast.name}</span>
+                                        <span class="meal-price">${selected.breakfast_price.toFixed(2)} ₽</span>
+                                    </div>
+                                    ${breakfast.ingredients && breakfast.ingredients.length > 0 ? `
+                                        <div class="meal-ingredients">
+                                            <strong>📋 Состав:</strong>
+                                            <ul>
+                                                ${breakfast.ingredients.map(ing => `
+                                                    <li>• ${ing.name} ${ing.quantity ? '(' + (ing.quantity % 1 === 0 ? ing.quantity : ing.quantity.toFixed(1)) + ' ' + ing.unit + ')' : ''}</li>
+                                                `).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }
+
+                        // Обед
+                        if (selected.lunch && mealInfo.lunch) {
+                            const lunch = mealInfo.lunch;
+                            daysDetailsHTML += `
+                                <div class="meal-detail lunch-detail">
+                                    <div class="meal-header">
+                                        <span class="meal-type">🕐 Обед</span>
+                                        <span class="meal-name">${lunch.name}</span>
+                                        <span class="meal-price">${selected.lunch_price.toFixed(2)} ₽</span>
+                                    </div>
+                                    ${lunch.ingredients && lunch.ingredients.length > 0 ? `
+                                        <div class="meal-ingredients">
+                                            <strong>📋 Состав:</strong>
+                                            <ul>
+                                                ${lunch.ingredients.map(ing => `
+                                                    <li>• ${ing.name} ${ing.quantity ? '(' + (ing.quantity % 1 === 0 ? ing.quantity : ing.quantity.toFixed(1)) + ' ' + ing.unit + ')' : ''}</li>
+                                                `).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }
+
+                        daysDetailsHTML += `</div>`;
+                    }
+                });
+
+                // Формируем единый выпадающий список
+                const detailsHTML = `
+                    <div class="details-toggle">
+                        <div class="details-header" onclick="toggleDetails(this)">
+                            <span>📋 Детали по дням</span>
+                            <span class="toggle-icon">▶</span>
+                        </div>
+                        <div class="details-content">
+                            ${daysDetailsHTML || '<p style="color: #999; text-align: center; padding: 16px;">Нет выбранных приёмов пищи</p>'}
+                        </div>
+                    </div>
+                `;
+
+                priceDetails.innerHTML = detailsHTML;
+
+                // Инициализируем скрытие содержимого
+                document.querySelector('.details-content').style.display = 'none';
+            } else {
+                priceDetails.innerHTML = '<p style="color: #999; text-align: center; padding: 16px;">Выберите дни для отображения деталей</p>';
+            }
+
+            // Обновление скрытых полей формы
+            document.getElementById('total-price-input').value = currentTotalPrice;
+            document.getElementById('days-count-input').value = daysCount;
+            document.getElementById('days-config-input').value = JSON.stringify(currentConfig);
+
+            // Добавляем флаг сдвига на следующую неделю
+            if (data.needs_shift) {
+                document.getElementById('days-config-input').setAttribute('data-needs-shift', 'true');
+            } else {
+                document.getElementById('days-config-input').removeAttribute('data-needs-shift');
+            }
+
+            // Активируем кнопку, если есть хотя бы один приём пищи
+            document.getElementById('pay-subscription-btn').disabled = currentMealCount === 0;
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка расчёта:', error);
+        // Более информативное сообщение
+        alert('Ошибка при расчёте стоимости. Проверьте, что выбраны хотя бы один приём пищи и все блюда доступны.');
+    });
+}
+
+// Обработчик изменения периода
+document.getElementById('subscription-period').addEventListener('change', function() {
+    calculatePrice();
+});
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', initSubscriptionUI);
+
+// Добавляем флаг сдвига в форму перед отправкой
+document.getElementById('subscription-form').addEventListener('submit', function(e) {
+    const needsShift = document.getElementById('days-config-input').getAttribute('data-needs-shift') === 'true';
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'needs_shift';
+    hiddenInput.value = needsShift;
+    this.appendChild(hiddenInput);
+});
+
+// Функция переключения единого выпадающего списка
+function toggleDetails(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+
+    if (content.style.display === 'block') {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+    } else {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+    }
+
+    // Прокручиваем в начало при открытии
+    if (content.style.display === 'block') {
+        content.scrollTop = 0;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уведомления</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .notifications-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #4361ee;
+            transition: all 0.3s;
+        }
+
+        .notification-card.unread {
+            background: #f8f9ff;
+            border-left-color: #4361ee;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.15);
+        }
+
+        .notification-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .notification-card.success { border-left-color: #28a745; }
+        .notification-card.warning { border-left-color: #ffc107; }
+        .notification-card.error { border-left-color: #dc3545; }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .notification-time {
+            font-size: 0.85rem;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        .notification-message {
+            color: #495057;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .notification-icon {
+            font-size: 1.4rem;
+            margin-right: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Стиль для кнопки удаления всех уведомлений */
+        .btn-mark-all-read {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+        .btn-mark-all-read:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Стиль для кнопки удаления одного уведомления */
+        .notification-delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-left: 8px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        .notification-card:hover .notification-delete-btn {
+            opacity: 1;
+        }
+        .notification-delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        /* Анимация удаления */
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+        .notification-deleting {
+            animation: slideOut 0.5s forwards;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .pagination a {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #4361ee;
+        }
+
+        .pagination .active {
+            background: #4361ee;
+            color: white;
+            border-color: #4361ee;
+        }
+
+        .notification-badge {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔔 Уведомления</h1>
+    </header>
+    <div class="container">
+        <div class="notifications-container">
+            <a href="{% if current_user.role == 'student' %}/student{% elif current_user.role == 'cook' %}/cook{% elif current_user.role == 'admin' %}/admin{% endif %}" class="back-link">← Назад</a>
+
+            <button class="btn-mark-all-read" onclick="deleteAllNotifications()">
+                <span>🗑️</span> Удалить все уведомления
+            </button>
+
+            {% if notifications %}
+                {% for notif in notifications %}
+                <div class="notification-card {{ notif.type }} {% if not notif.is_read %}unread{% endif %}" data-id="{{ notif.id }}">
+                    <div class="notification-header">
+                        <h3 class="notification-title">
+                            {% if notif.type == "success" %}✅
+                            {% elif notif.type == "warning" %}⚠️
+                            {% elif notif.type == "error" %}❌
+                            {% else %}ℹ️{% endif %}
+                            {{ notif.title }}
+                            {% if not notif.is_read %}
+                                <span class="notification-badge">Новое</span>
+                            {% endif %}
+                        </h3>
+                        <span class="notification-time">{{ notif.created_at }}</span>
+                    </div>
+                    <p class="notification-message">{{ notif.message }}</p>
+                    <button class="notification-delete-btn" onclick="deleteNotification({{ notif.id }})">
+                        ✕ Удалить
+                    </button>
+                </div>
+                {% endfor %}
+
+                <!-- Пагинация -->
+                {% if pagination.pages > 1 %}
+                <div class="pagination">
+                    {% if pagination.has_prev %}
+                        <a href="{{ url_for('routes.notifications_page', page=pagination.prev_num) }}">← Предыдущая</a>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == pagination.page %}
+                                <a class="active" href="{{ url_for('routes.notifications_page', page=page_num) }}">{{ page_num }}</a>
+                            {% else %}
+                                <a href="{{ url_for('routes.notifications_page', page=page_num) }}">{{ page_num }}</a>
+                            {% endif %}
+                        {% else %}
+                            <span>...</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                        <a href="{{ url_for('routes.notifications_page', page=pagination.next_num) }}">Следующая →</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>Нет уведомлений</h3>
+                    <p>Здесь будут отображаться все ваши уведомления</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <a href="/logout" class="logout-link">🚪 Выйти</a>
+    </div>
+
+    <script>
+        function deleteNotification(notificationId) {
+            if (!confirm('Вы уверены, что хотите удалить это уведомление?')) {
+                return;
+            }
+
+            const notifElement = document.querySelector(`[data-id="${notificationId}"]`);
+
+            if (!notifElement) {
+                alert('Не удалось найти уведомление для удаления');
+                return;
+            }
+
+            fetch(`/api/notifications/${notificationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    notifElement.classList.add('notification-deleting');
+
+                    setTimeout(() => {
+                        notifElement.remove();
+
+                        const remaining = document.querySelectorAll('.notification-card');
+                        if (remaining.length === 0) {
+                            location.reload();
+                        }
+                    }, 500);
+                } else {
+                    alert('Ошибка при удалении уведомления');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при удалении');
+            });
+        }
+
+        function deleteAllNotifications() {
+            if (!confirm('Вы уверены, что хотите удалить все уведомления? Это действие нельзя отменить!')) {
+                return;
+            }
+
+            fetch('/api/notifications/delete-all', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const notifications = document.querySelectorAll('.notification-card');
+                    let deletedCount = 0;
+
+                    notifications.forEach((notif, index) => {
+                        setTimeout(() => {
+                            notif.classList.add('notification-deleting');
+                            setTimeout(() => {
+                                notif.remove();
+                                deletedCount++;
+
+                                if (deletedCount === notifications.length) {
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 300);
+                                }
+                            }, 500);
+                        }, index * 50);
+                    });
+                } else {
+                    alert('Ошибка при удалении уведомлений');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при удалении');
+            });
+        }
+    </script>
+</body>
+</html>

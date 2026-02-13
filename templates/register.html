@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Регистрация{% endblock %}
+{% block header_title %}Школьное питание{% endblock %}
+{% block extra_css %}
+<style>
+    .password-wrapper {
+        position: relative;
+    }
+    .toggle-password {
+        position: absolute;
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        margin: 0;
+    }
+    .class-field {
+        display: none;
+    }
+    .class-field.visible {
+        display: block;
+    }
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    .card h2 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+    .flash-message {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+    }
+    .flash-success { background: #2ecc71; }
+    .flash-error { background: #e74c3c; }
+    .flash-info { background: #3498db; }
+    .flash-warning { background: #f39c12; }
+
+    /* Требования к паролю */
+    .password-requirements {
+        background: #f8f9ff;
+        border-left: 4px solid #4361ee;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 10px 0 20px;
+        font-size: 0.9rem;
+    }
+    .password-requirements ul {
+        margin: 8px 0 0 20px;
+        padding-left: 0;
+    }
+    .password-requirements li {
+        margin-bottom: 4px;
+        color: #495057;
+    }
+    .password-requirements li::before {
+        content: "• ";
+        color: #4361ee;
+        font-weight: bold;
+    }
+
+    /* Секция кодов доступа */
+    .access-code-section {
+        background: #fff8e1;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        display: none;
+    }
+    .access-code-section.visible {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+    .access-code-section h4 {
+        margin: 0 0 8px 0;
+        color: #856404;
+        font-size: 1rem;
+    }
+    .access-code-section p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #856404;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Подсказки кодов */
+    .code-hint {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 4px;
+        font-style: italic;
+    }
+    .code-hint.admin {
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<div class="card">
+    <h2>Регистрация</h2>
+
+    <!-- Требования к паролю -->
+    <div class="password-requirements">
+        <strong>🔒 Требования к паролю:</strong>
+        <ul>
+            <li>Минимум 8 символов</li>
+            <li>Хотя бы одна цифра (0-9)</li>
+            <li>Хотя бы одна заглавная буква (A-Z)</li>
+            <li>Хотя бы одна строчная буква (a-z)</li>
+            <li>Хотя бы один специальный символ (!@#$%^&* и т.д.)</li>
+        </ul>
+    </div>
+
+    <form method="post" id="register-form">
+        <label>ФИО</label>
+        <input name="name" required>
+
+        <label>Email</label>
+        <input name="email" type="email" required>
+
+        <label>Пароль</label>
+        <div class="password-wrapper">
+            <input name="password" type="password" id="reg-password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('reg-password')">
+                👁️
+            </button>
+        </div>
+
+        <label>Роль</label>
+        <select name="role" id="role-select" required>
+            <option value="student" selected>Ученик</option>
+            <option value="cook">Повар</option>
+            <option value="admin">Администратор</option>
+        </select>
+
+        <!-- Секция кода доступа -->
+        <div class="access-code-section" id="access-code-section">
+            <h4>🔑 Код доступа</h4>
+            <p>Для регистрации в выбранной роли требуется специальный код доступа.</p>
+            <input
+                name="access_code"
+                type="text"
+                id="access-code-input"
+                placeholder="Введите код доступа"
+                required
+                autocomplete="off"
+                style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px;"
+            >
+            <div class="code-hint" id="code-hint">
+                Обратитесь к администратору для получения кода доступа
+            </div>
+        </div>
+
+        <div class="class-field visible" id="class-field">
+            <label>Класс <span style="color: #e74c3c;">*</span></label>
+            <input name="class_name" id="class-input" placeholder="Например: 5А, 10Б" required>
+        </div>
+
+        <button>Зарегистрироваться</button>
+    </form>
+
+    <a href="/login" style="display: block; text-align: center; margin-top: 15px; color: #4361ee; text-decoration: none;">
+        Уже есть аккаунт? Войти
+    </a>
+</div>
+<script>
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = field.nextElementSibling;
+        if (field.type === "password") {
+            field.type = "text";
+            button.textContent = "🙈";
+        } else {
+            field.type = "password";
+            button.textContent = "👁️";
+        }
+    }
+
+    // Показ/скрытие поля класса и кода доступа при смене роли
+    document.getElementById('role-select').addEventListener('change', function() {
+        const classField = document.getElementById('class-field');
+        const classInput = document.getElementById('class-input');
+        const accessCodeSection = document.getElementById('access-code-section');
+        const accessCodeInput = document.getElementById('access-code-input');
+        const codeHint = document.getElementById('code-hint');
+        const form = document.getElementById('register-form');
+
+        // Скрываем все специфичные поля
+        classField.classList.remove('visible');
+        classInput.removeAttribute('required');
+        classInput.value = '';
+        accessCodeSection.classList.remove('visible');
+        accessCodeInput.value = '';
+        codeHint.textContent = 'Обратитесь к администратору для получения кода доступа';
+        codeHint.className = 'code-hint';
+
+        // Показываем нужные поля в зависимости от роли
+        if (this.value === 'student') {
+            classField.classList.add('visible');
+            classInput.setAttribute('required', 'required');
+            accessCodeSection.classList.add('visible');
+            codeHint.textContent = '🔑 Код для учеников: STUDENT2026';
+        } else if (this.value === 'cook') {
+            accessCodeSection.classList.add('visible');
+            codeHint.textContent = '👨‍🍳 Код для поваров: Спросите у главного администратора';
+            codeHint.className = 'code-hint admin';
+        } else if (this.value === 'admin') {
+            accessCodeSection.classList.add('visible');
+            codeHint.textContent = '⚠️ Код для администраторов: Только для авторизованного персонала';
+            codeHint.className = 'code-hint admin';
+        }
+
+        form.classList.remove('was-validated');
+    });
+
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        // Показываем поле кода для ученика по умолчанию
+        document.getElementById('access-code-section').classList.add('visible');
+    });
+</script>
+{% endblock %}

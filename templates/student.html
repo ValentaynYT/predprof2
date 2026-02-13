@@ -1,0 +1,1528 @@
+{% extends "base.html" %}
+{% block title %}Кабинет ученика{% endblock %}
+{% block header_title %}🍽️ Кабинет ученика{% endblock %}
+{% block extra_css %}
+<style>
+/* Боковая панель навигации */
+.student-layout {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+.sidebar-menu {
+    width: 250px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #495057;
+    border-left: 3px solid transparent;
+}
+.menu-item:hover {
+    background: #f8f9ff;
+    color: #4361ee;
+}
+.menu-item.active {
+    background: #e8f4ff;
+    color: #4361ee;
+    border-left-color: #4361ee;
+    box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+}
+.menu-item i {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+}
+/* Контентная область */
+.content-area {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+.content-section {
+    display: none;
+}
+.content-section.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Баланс вверху */
+.balance-banner {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+.balance-banner h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.balance-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-top: 8px;
+}
+/* Стили для остальных элементов */
+.day-section {
+    display: none;
+}
+.day-section.active {
+    display: block;
+}
+.meal-item {
+    margin-bottom: 20px;
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+}
+.meal-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+.status-badge {
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+.status-paid { background: #e8f5e9; color: #2e7d32; }
+.status-consumed { background: #fff8e1; color: #ff8f00; }
+.review-form { margin-top: 8px; }
+/* Табы для дней недели */
+.tabs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+.tab-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #495057;
+    transition: all 0.2s;
+    text-align: center;
+    white-space: nowrap;
+}
+.tab-btn:hover {
+    background: #e9ecef;
+    border-color: #4361ee;
+    color: #4361ee;
+}
+.tab-btn.active {
+    background: #4361ee;
+    color: white;
+    border-color: #4361ee;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+}
+.tab-btn.today-tab {
+    background: #ff9800;
+    color: white;
+    border-color: #ff9800;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
+    position: relative;
+}
+.tab-btn.today-tab::after {
+    content: '•';
+    position: absolute;
+    top: -6px;
+    right: 4px;
+    font-size: 1.2rem;
+    color: #fff;
+    animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.tab-btn.weekend {
+    background: #ffebee;
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+/* Выпадающий список выбора недели */
+.week-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.month-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: #495057;
+    transition: all 0.2s;
+    min-width: 36px;
+    text-align: center;
+}
+.month-btn:hover {
+    background: #e9ecef;
+    border-color: #4361ee;
+    color: #4361ee;
+}
+.month-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.dropdown-week {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-toggle {
+    cursor: pointer;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 500;
+    color: #495057;
+    text-align: center;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dropdown-toggle::after {
+    content: '▼';
+    font-size: 0.7rem;
+    margin-left: 8px;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 300px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 100;
+    border-radius: 8px;
+    padding: 10px;
+    top: 100%;
+    left: 0;
+    margin-top: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.dropdown:hover .dropdown-content,
+.dropdown-week:hover .dropdown-content {
+    display: block;
+}
+.week-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.week-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.week-item:hover {
+    background-color: #f1f1f1;
+}
+.week-item.active {
+    background-color: #e8f4ff;
+    font-weight: bold;
+    border-left: 3px solid #4361ee;
+}
+.week-item.weekend {
+    color: #e74c3c;
+    font-weight: bold;
+}
+.week-item.today {
+    font-weight: bold;
+    border-left: 3px solid #ff9800;
+    background: #fff8e1;
+}
+/* Стили для месяцев */
+.month-label {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    min-width: 120px;
+    text-align: center;
+}
+/* Стили для переключения месяцев */
+.month-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+/* Стили для выходных дней в календаре */
+.weekend-date {
+    color: #e74c3c;
+    font-weight: bold;
+}
+/* Платёжная карта */
+.payment-card select {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+.card h2, .card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+/* Статистика */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+.stat-card {
+    background: #f8f9ff;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #4361ee;
+}
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2b2d42;
+    margin: 8px 0;
+}
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+/* Персональная информация */
+.personal-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+.info-item {
+    background: #f8f9ff;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 3px solid #4361ee;
+}
+.info-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+.info-value {
+    font-weight: 600;
+    color: #2b2d42;
+}
+/* Flash-сообщения */
+.flash-message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+}
+.flash-success { background: #2ecc71; }
+.flash-error { background: #e74c3c; }
+.flash-info { background: #3498db; }
+.flash-warning { background: #f39c12; }
+/* Стили для выходных дней */
+.tab-btn.weekend {
+    background: #ffebee;
+    color: #e74c3c;
+    border-color: #e74c3c;
+    font-weight: 600;
+}
+
+.tab-btn.weekend.today-tab {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+}
+
+.day-section.weekend-section {
+    background: #fff5f5;
+    border-left: 4px solid #e74c3c;
+}
+
+/* Стили для прошедших дней */
+.tab-btn.past-day {
+    background: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    border-color: #bdbdbd !important;
+    opacity: 0.7;
+    font-style: italic;
+}
+.tab-btn.past-day.weekend {
+    /* Для прошедших выходных сохраняем серый фон, но текст делаем темнее */
+    color: #757575 !important;
+}
+.tab-btn.past-day.today-tab {
+    /* Если сегодняшний день случайно стал прошедшим (не должно происходить), убираем оранжевый */
+    background: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    border-color: #bdbdbd !important;
+    box-shadow: none !important;
+}
+.tab-btn.past-day::after {
+    /* Убираем индикатор "сегодня" для прошедших дней */
+    display: none !important;
+}
+/* Стили для состава блюд */
+.meal-ingredients {
+    background: #f8f9ff;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 0.95rem;
+}
+.meal-ingredients ul {
+    margin: 8px 0 0 18px;
+    padding-left: 0;
+    list-style-type: none;
+}
+.meal-ingredients li {
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+.meal-ingredients li span {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<!-- Баланс вверху -->
+<div class="balance-banner">
+    <h3>💰 Ваш баланс</h3>
+    <div class="balance-amount">{{ "%.2f"|format(current_balance) }} ₽</div>
+</div>
+<div class="student-layout">
+    <!-- Боковое меню -->
+    <div class="sidebar-menu">
+        <div class="menu-item active" data-section="personal-info">
+            <span>👤</span>
+            <span>Личная информация</span>
+        </div>
+        <div class="menu-item" data-section="menu-week">
+            <span>📋</span>
+            <span>Меню на неделю</span>
+        </div>
+        <div class="menu-item" data-section="food-order">
+            <span>💳</span>
+            <span>Заказ питания</span>
+        </div>
+        <div class="menu-item" data-section="preferences">
+            <span>⚠️</span>
+            <span>Пищевые особенности</span>
+        </div>
+        <div class="menu-item" data-section="wallet">
+            <span>➕</span>
+            <span>Пополнить кошелёк</span>
+        </div>
+    </div>
+    <!-- Контентная область -->
+    <div class="content-area">
+        <!-- Личная информация -->
+        <div id="personal-info" class="content-section active">
+            <h2>👤 Личная информация</h2>
+            <!-- Аватарка -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="position: relative; display: inline-block;">
+                    <img
+                        src="{{ url_for('static', filename='avatars/' + current_user.avatar_filename) }}"
+                        alt="Аватарка"
+                        id="avatar-preview"
+                        style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #4361ee; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                    >
+                    <label for="avatar-input" style="position: absolute; bottom: 0; right: 0; background: #4361ee; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                        ✏️
+                        <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display: none;">
+                    </label>
+                </div>
+                <p style="margin-top: 12px; color: #6c757d; font-size: 0.9rem;">
+                    Нажмите на ✏️ чтобы изменить аватарку
+                </p>
+                <!-- Форма загрузки (скрыта, отправляется через JS) -->
+                <form id="avatar-upload-form" method="post" action="/upload_avatar" enctype="multipart/form-data" style="display: none;">
+                    <input type="file" name="avatar" id="avatar-file-input" accept="image/*">
+                </form>
+            </div>
+            <div class="personal-info-grid">
+                <div class="info-item">
+                    <div class="info-label">ФИО</div>
+                    <div class="info-value">{{ current_user.full_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Класс</div>
+                    <div class="info-value">{{ current_user.class_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ current_user.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата регистрации</div>
+                    <div class="info-value">
+                        {% if current_user.timestamp %}
+                            {{ current_user.timestamp.strftime('%d.%m.%Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top: 24px; padding: 16px; background: #f8f9ff; border-radius: 8px; border-left: 4px solid #4361ee;">
+                <strong>ℹ️ Информация:</strong> Для изменения личных данных обратитесь к администратору системы.
+            </p>
+        </div>
+        <!-- Меню на неделю -->
+        <div id="menu-week" class="content-section">
+            <h2>📋 Меню на неделю</h2>
+
+            <!-- Выпадающий список выбора недели и месяца -->
+            <div class="week-selector">
+                <div class="month-selector">
+                    <button id="prevMonth" class="month-btn">&lt;</button>
+                    <div class="month-label" id="currentMonthLabel">Январь 2026</div>
+                    <button id="nextMonth" class="month-btn">&gt;</button>
+                </div>
+                <div class="dropdown-week">
+                    <div class="dropdown-toggle" id="weekDropdownToggle">
+                        <span id="currentWeekRange">26 янв - 01 фев</span>
+                    </div>
+                    <div class="dropdown-content" id="weekDropdownContent">
+                        <div class="week-list" id="weekList">
+                            <!-- Список недель будет сгенерирован динамически -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Табы для дней недели -->
+            <div class="tabs" id="weekTabs">
+                <button id="prevWeek" class="tab-btn">&lt;</button>
+                {% for day in days %}
+                    {% set is_weekend = day in ['saturday', 'sunday'] %}
+                    <button
+                        class="tab-btn {% if loop.first %}active{% endif %} {% if day == current_day %}today-tab{% endif %} {% if is_weekend %}weekend{% endif %}"
+                        data-day="{{ day }}"
+                        {% if is_weekend %}data-weekend="true"{% endif %}
+                    >
+                        {% if day == 'monday' %}Пн
+                        {% elif day == 'tuesday' %}Вт
+                        {% elif day == 'wednesday' %}Ср
+                        {% elif day == 'thursday' %}Чт
+                        {% elif day == 'friday' %}Пт
+                        {% elif day == 'saturday' %}Сб
+                        {% elif day == 'sunday' %}Вс{% endif %}
+                        <span class="day-date">{{ day_dates[day].day }}</span>
+                    </button>
+                {% endfor %}
+                <button id="nextWeek" class="tab-btn">&gt;</button>
+            </div>
+
+            <!-- Секции дней недели -->
+            {% for day in days %}
+            {% set is_weekend = day in ['saturday', 'sunday'] %}
+            <div class="day-section {% if loop.first %}active{% endif %} {% if is_weekend %}weekend-section{% endif %}" id="day-{{ day }}">
+                {% if is_weekend %}
+                    <div style="text-align: center; padding: 20px; background: #ffebee; border-radius: 8px; margin-bottom: 16px;">
+                        <h3 style="color: #e74c3c; margin: 0;">
+                            <span style="font-size: 2rem;">🏖️</span><br>
+                            Выходной день
+                        </h3>
+                        <p style="color: #7f8c8d; margin-top: 8px;">
+                            В столовой выходной. Приятного отдыха!
+                        </p>
+                    </div>
+                {% else %}
+                    {% for meal_type, meal in meals[day].items() %}
+                        {% if meal %}
+                            <div class="meal-item">
+                                <div class="meal-header">
+                                    <span>
+                                        {{ "🕗 Завтрак" if meal_type == "breakfast" else "🕐 Обед" }}
+                                        <span class="status-badge" style="display: none;"></span>
+                                    </span>
+                                    <span>{{ meal.price }} ₽</span>
+                                </div>
+
+                                <!-- НАЗВАНИЕ БЛЮДА -->
+                                <p style="font-weight: 600; font-size: 1.1rem; margin: 8px 0;">{{ meal.name }}</p>
+
+                                <!-- СОСТАВ БЛЮДА (ИНГРЕДИЕНТЫ) -->
+                                {% if meal.ingredients and meal.ingredients|length > 0 %}
+                                    <div style="background: #f8f9ff; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.95rem;">
+                                        <strong>📋 Состав:</strong>
+                                        <ul style="margin: 8px 0 0 18px; padding-left: 0; list-style-type: none;">
+                                            {% for ing in meal.ingredients %}
+                                                <li style="margin-bottom: 4px; line-height: 1.4;">
+                                                    • {{ ing.name }}
+                                                    {% if ing.quantity %}
+                                                        <span style="color: #6c757d; font-size: 0.9em;">({{ "%.1f"|format(ing.quantity) if ing.quantity % 1 != 0 else ing.quantity }} {{ ing.unit }})</span>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Сообщение для будущих дней вместо формы -->
+                                <div class="future-review-message" style="display: none; background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; color: #2e7d32; font-weight: 500;">
+                                    📅 Отзыв можно будет оставить после наступления этого дня
+                                </div>
+
+                                <!-- СТАТУС ЗАКАЗА И СООБЩЕНИЯ -->
+                                {% set order_key = day + '_' + meal_type + '_0' %}
+                                {% set order_data = order_status.get(order_key, {}) %}
+
+                                <!-- === ИСПРАВЛЕНИЕ: Проверяем статус заказа по-другому === -->
+                                {% if order_data and order_data.get('consumed', False) and order_data.get('student_confirmed', False) %}
+                                    <!-- Питание получено и подтверждено - показываем форму отзыва независимо от статуса оплаты -->
+                                    <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; color: #2e7d32; font-weight: 500;">
+                                        ✅ <strong>Питание получено и подтверждено</strong>
+                                    </div>
+
+                                    <!-- Форма отзыва -->
+                                    <form method="post" action="/submit_review" class="review-form" data-day="{{ day }}" data-meal-type="{{ meal_type }}">
+                                        <input type="hidden" name="day" value="{{ day }}">
+                                        <input type="hidden" name="meal_type" value="{{ meal_type }}">
+                                        <input type="hidden" name="week_offset" value="0">
+                                        <textarea name="text" placeholder="Ваш отзыв..." style="height: 60px;">{{ user_reviews.get((day, meal_type), '') }}</textarea>
+                                        <button type="submit" class="btn-review" style="width: auto; margin-top: 6px;">Отправить</button>
+                                    </form>
+
+                                {% elif order_data and order_data.get('consumed', False) and not order_data.get('student_confirmed', False) %}
+                                    <!-- Повар выдал, но ученик не подтвердил -->
+                                    <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #ffc107;">
+                                        <strong style="color: #856404;">⚠️ Подтвердите получение</strong>
+                                        <p style="margin: 8px 0 0 0; font-size: 0.9rem; color: #856404;">
+                                            Повар выдал вам питание. Нажмите кнопку ниже, чтобы подтвердить получение.
+                                        </p>
+                                        <form method="post" action="/student/confirm_consumption/{{ order_data.get('order_id', 0) }}" style="margin-top: 12px;">
+                                            <button type="submit" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
+                                                ✅ Подтвердить получение
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                {% elif order_data and order_data.get('paid', False) and not order_data.get('consumed', False) %}
+                                    <!-- Заказ оплачен, но ещё не выдан -->
+                                    <div style="background: #f8d7da; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 3px solid #dc3545;">
+                                        <strong style="color: #721c24;">🔒 Питание ещё не выдано</strong>
+                                        <p style="margin: 8px 0 0 0; font-size: 0.9rem; color: #721c24;">
+                                            Обратитесь к повару в столовой для получения питания.
+                                        </p>
+                                    </div>
+
+                                {% else %}
+                                    <!-- Заказ не оплачен или отменён -->
+                                    <div style="background: #f8d7da; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 3px solid #dc3545;">
+                                        <strong style="color: #721c24;">🔒 Сначала оплатите питание</strong>
+                                        <p style="margin: 8px 0 0 0; font-size: 0.9rem; color: #721c24;">
+                                            Оплатите этот приём пищи, чтобы получить возможность оставить отзыв.
+                                        </p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+        <!-- Заказ питания -->
+        <div id="food-order" class="content-section">
+            <h2>💳 Заказ питания</h2>
+
+            <!-- Гибкий абонемент (в стиле старого дизайна) -->
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin-bottom: 24px; border: 1px solid #bee9ff;">
+                <h3 style="margin-top: 0;">✨ Гибкий абонемент</h3>
+                <p style="color: #495057; margin-bottom: 16px; line-height: 1.5;">
+                    Выберите конкретные дни и приёмы пищи. Платите только за то, что действительно нужно!
+                </p>
+                <div style="background: rgba(255, 255, 255, 0.7); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem;">
+                        <span>🎯 Гибкость:</span>
+                        <strong style="color: #4361ee;">Выбирайте сами</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem;">
+                        <span>💰 Экономия:</span>
+                        <strong style="color: #2ecc71;">Только за нужное</strong>
+                    </div>
+                </div>
+                <a href="/student/subscription/flexible" class="btn-save"
+                   style="background: #2ecc71; color: white; width: 100%; padding: 12px;
+                          font-size: 1.1rem; margin-top: 10px; display: block;
+                          text-align: center; text-decoration: none; border: none;
+                          border-radius: 6px; cursor: pointer; box-sizing: border-box;">
+                    ✨ Настроить и оплатить
+                </a>
+            </div>
+
+            <!-- Разовая оплата -->
+            <div style="background: #fff8e1; padding: 20px; border-radius: 10px; border: 1px solid #ffd54f;">
+                <h3 style="margin-top: 0;">🍽️ Разовая оплата</h3>
+                <p style="color: #666; margin-bottom: 16px; font-size: 0.95rem;">
+                    Если нужно оплатить всего один приём пищи
+                </p>
+                <form method="post" action="/pay" id="single-pay-form">
+                    <input type="hidden" name="type" value="single">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500;">📅 День:</label>
+                    <select name="day" required id="pay-day-select" style="width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 6px;">
+                        {% for item in available_payment_days %}
+                        <option value="{{ item.value }}">{{ item.display }}</option>
+                        {% endfor %}
+                    </select>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500;">🕗 Приём пищи:</label>
+                    <select name="meal_type" required id="pay-meal-select" style="width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 6px;">
+                        <option value="breakfast" data-price="{{ meals['monday']['breakfast'].price if meals['monday']['breakfast'] else 0 }}">🕗 Завтрак ({{ meals['monday']['breakfast'].price if meals['monday']['breakfast'] else '0' }} ₽)</option>
+                        <option value="lunch" data-price="{{ meals['monday']['lunch'].price if meals['monday']['lunch'] else 0 }}">🕐 Обед ({{ meals['monday']['lunch'].price if meals['monday']['lunch'] else '0' }} ₽)</option>
+                    </select>
+                    <button type="submit" class="btn-save" style="background: #e67e22; width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 10px;" id="single-pay-btn">
+                        💳 Оплатить разово
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Пищевые особенности -->
+        <div id="preferences" class="content-section">
+            <h2>⚠️ Пищевые особенности</h2>
+            <p style="color: #6c757d; margin-bottom: 20px;">
+                Укажите аллергии, непереносимости или другие пищевые ограничения. Эта информация будет доступна повару.
+            </p>
+            <form method="post">
+                <textarea
+                    name="allergy"
+                    placeholder="Например: аллергия на молоко, без глютена, непереносимость орехов, вегетарианское питание и т.д."
+                    style="width: 100%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; margin-bottom: 16px;"
+                >{{ current_allergy }}</textarea>
+                <button type="submit" class="btn-save" style="width: 100%; padding: 12px; font-size: 1.1rem;">
+                    💾 Сохранить изменения
+                </button>
+            </form>
+            {% if current_allergy %}
+                <div style="margin-top: 20px; padding: 16px; background: #fff8e1; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <strong>Текущие особенности:</strong>
+                    <p style="margin: 8px 0 0 0;">{{ current_allergy }}</p>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Пополнение кошелька -->
+        <div id="wallet" class="content-section">
+            <h2>💳 Пополнить кошелёк</h2>
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 24px;">
+                <h3 style="margin-top: 0; color: #1976d2;">💰 Текущий баланс</h3>
+                <div style="font-size: 2rem; font-weight: bold; color: #1976d2;">
+                    {{ "%.2f"|format(current_balance) }} ₽
+                </div>
+            </div>
+            <form method="post" action="/topup">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                    Сумма пополнения (₽):
+                </label>
+                <input
+                    type="number"
+                    name="amount"
+                    min="10"
+                    max="10000"
+                    step="10"
+                    placeholder="Введите сумму от 10 до 10000 ₽"
+                    required
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1rem; margin-bottom: 16px;"
+                >
+                <button type="submit" class="btn-save" style="background: #3498db; width: 100%; padding: 14px; font-size: 1.2rem;">
+                    ➕ Пополнить баланс
+                </button>
+            </form>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                ⚠️ Это имитация. В реальной системе интегрируется платёжный шлюз (СБП, банковская карта, электронные деньги).
+            </p>
+            <div style="margin-top: 24px; padding: 16px; background: #f8f9ff; border-radius: 8px;">
+                <h4 style="margin-top: 0;">💡 Рекомендуемые суммы:</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;">
+                    <button type="button" onclick="document.querySelector('[name=amount]').value='500'" style="padding: 8px; background: #e0e0ff; border: none; border-radius: 6px; cursor: pointer;">500 ₽</button>
+                    <button type="button" onclick="document.querySelector('[name=amount]').value='1000'" style="padding: 8px; background: #e0e0ff; border: none; border-radius: 6px; cursor: pointer;">1000 ₽</button>
+                    <button type="button" onclick="document.querySelector('[name=amount]').value='2000'" style="padding: 8px; background: #e0e0ff; border: none; border-radius: 6px; cursor: pointer;">2000 ₽</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// ========================================
+// ВЫПАДАЮЩИЙ СПИСОК ВЫБОРА НЕДЕЛИ И МЕСЯЦА
+// ========================================
+let currentWeekOffset = 0; // Смещение от текущей недели (может быть отрицательным для прошедших недель)
+const MAX_WEEKS_AHEAD = 52;  // 52 недели вперёд (весь год)
+const MAX_WEEKS_BACK = 52;   // 52 недели назад (весь год)
+let currentMonthIndex = new Date().getMonth(); // Текущий месяц (0-11)
+const currentYear = new Date().getFullYear();
+const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const currentMonthLabel = document.getElementById('currentMonthLabel');
+const weekDropdownToggle = document.getElementById('weekDropdownToggle');
+const weekDropdownContent = document.getElementById('weekDropdownContent');
+const weekList = document.getElementById('weekList');
+const prevWeekBtn = document.getElementById('prevWeek');
+const nextWeekBtn = document.getElementById('nextWeek');
+
+// ========================================
+// ГЕНЕРАЦИЯ СПИСКА НЕДЕЛЬ ДЛЯ ТЕКУЩЕГО ГОДА
+// ========================================
+function generateWeeksForYear(year) {
+    const weeks = [];
+    let currentDate = new Date(year, 0, 1);
+
+    // Найти первый понедельник года
+    while (currentDate.getDay() !== 1) {
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Генерируем недели
+    while (currentDate.getFullYear() === year) {
+        const weekStart = new Date(currentDate);
+        const weekEnd = new Date(currentDate);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        // Форматируем даты
+        const startDateStr = formatDate(weekStart);
+        const endDateStr = formatDate(weekEnd);
+
+        weeks.push({
+            start: weekStart,
+            end: weekEnd,
+            startDateStr: startDateStr,
+            endDateStr: endDateStr,
+            month: weekStart.getMonth(),
+            year: weekStart.getFullYear(),
+            isCurrentWeek: isCurrentWeek(weekStart, weekEnd)
+        });
+
+        currentDate.setDate(currentDate.getDate() + 7);
+    }
+
+    return weeks;
+}
+
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'][date.getMonth()];
+    return `${day} ${month}`;
+}
+
+function isCurrentWeek(start, end) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return today >= start && today <= end;
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ ВЫПАДАЮЩЕГО СПИСКА НЕДЕЛЬ
+// ========================================
+function updateWeekDropdown() {
+    const weeks = generateWeeksForYear(currentYear);
+
+    // Фильтруем недели по текущему месяцу
+    const filteredWeeks = weeks.filter(week => week.month === currentMonthIndex);
+
+    weekList.innerHTML = '';
+
+    filteredWeeks.forEach((week, index) => {
+        const weekItem = document.createElement('div');
+        weekItem.className = 'week-item';
+
+        // Проверяем, содержит ли неделя выходные дни
+        const hasWeekend = weekContainsWeekend(week.start, week.end);
+        if (hasWeekend) {
+            weekItem.classList.add('weekend');
+        }
+
+        if (week.isCurrentWeek) {
+            weekItem.classList.add('today');
+        }
+
+        weekItem.innerHTML = `
+            <span>${week.startDateStr} - ${week.endDateStr}</span>
+            <span style="color: #666; font-size: 0.85rem;">${monthNames[week.month]}</span>
+        `;
+
+        weekItem.addEventListener('click', function() {
+            // Находим номер недели относительно текущей
+            const currentWeekStart = getCurrentWeekStart();
+            const diffDays = Math.floor((week.start - currentWeekStart) / (1000 * 60 * 60 * 24));
+            const weekOffset = Math.floor(diffDays / 7);
+
+            // Устанавливаем смещение (может быть отрицательным для прошедших недель)
+            currentWeekOffset = weekOffset;
+
+            // Ограничиваем в пределах допустимого диапазона
+            currentWeekOffset = Math.max(-MAX_WEEKS_BACK, Math.min(MAX_WEEKS_AHEAD, currentWeekOffset));
+
+            updateWeekDisplay();
+            // Закрываем выпадающий список
+            weekDropdownContent.style.display = 'none';
+        });
+
+        weekList.appendChild(weekItem);
+    });
+
+    // Обновляем отображение текущего диапазона
+    updateCurrentWeekRangeDisplay();
+}
+
+function weekContainsWeekend(start, end) {
+    let date = new Date(start);
+    while (date <= end) {
+        if (date.getDay() === 0 || date.getDay() === 6) { // Воскресенье или суббота
+            return true;
+        }
+        date.setDate(date.getDate() + 1);
+    }
+    return false;
+}
+
+function getCurrentWeekStart() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (вс) - 6 (сб)
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Понедельник текущей недели
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ ТЕКУЩЕГО ДИАПАЗОНА ДАТ
+// ========================================
+function updateCurrentWeekRangeDisplay() {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    const diff = today.getDate() - ((today.getDay() + 6) % 7);
+    startOfWeek.setDate(diff + currentWeekOffset * 7);
+
+    const weekEnd = new Date(startOfWeek);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    const startDateStr = formatDate(startOfWeek);
+    const endDateStr = formatDate(weekEnd);
+
+    document.getElementById('currentWeekRange').textContent = `${startDateStr} - ${endDateStr}`;
+    currentMonthLabel.textContent = `${monthNames[currentMonthIndex]} ${currentYear}`;
+}
+
+// ========================================
+// ПЕРЕКЛЮЧЕНИЕ НЕДЕЛЬ (весь год вперёд и назад)
+// ========================================
+if (prevWeekBtn && nextWeekBtn) {
+    prevWeekBtn.addEventListener('click', function() {
+        if (currentWeekOffset > -MAX_WEEKS_BACK) {
+            currentWeekOffset--;
+            // Автоматически переключаем месяц при выходе за пределы текущего
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            const diff = today.getDate() - ((today.getDay() + 6) % 7);
+            startOfWeek.setDate(diff + currentWeekOffset * 7);
+            const newMonth = startOfWeek.getMonth();
+            if (newMonth !== currentMonthIndex) {
+                currentMonthIndex = newMonth;
+                updateWeekDropdown();
+            }
+            updateWeekDisplay();
+        }
+    });
+
+    nextWeekBtn.addEventListener('click', function() {
+        if (currentWeekOffset < MAX_WEEKS_AHEAD) {
+            currentWeekOffset++;
+            // Автоматически переключаем месяц при выходе за пределы текущего
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            const diff = today.getDate() - ((today.getDay() + 6) % 7);
+            startOfWeek.setDate(diff + currentWeekOffset * 7);
+            const newMonth = startOfWeek.getMonth();
+            if (newMonth !== currentMonthIndex) {
+                currentMonthIndex = newMonth;
+                updateWeekDropdown();
+            }
+            updateWeekDisplay();
+        }
+    });
+}
+
+// ========================================
+// ПЕРЕКЛЮЧЕНИЕ МЕСЯЦЕВ
+// ========================================
+if (prevMonthBtn && nextMonthBtn) {
+    prevMonthBtn.addEventListener('click', function() {
+        if (currentMonthIndex > 0) {
+            currentMonthIndex--;
+            updateWeekDropdown();
+            // Сбрасываем смещение недели при смене месяца
+            currentWeekOffset = 0;
+            updateWeekDisplay();
+        }
+    });
+
+    nextMonthBtn.addEventListener('click', function() {
+        if (currentMonthIndex < 11) {
+            currentMonthIndex++;
+            updateWeekDropdown();
+            // Сбрасываем смещение недели при смене месяца
+            currentWeekOffset = 0;
+            updateWeekDisplay();
+        }
+    });
+}
+
+// ========================================
+// ПЕРЕКЛЮЧЕНИЕ ВЫПАДАЮЩЕГО СПИСКА
+// ========================================
+weekDropdownToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (weekDropdownContent.style.display === 'block') {
+        weekDropdownContent.style.display = 'none';
+    } else {
+        weekDropdownContent.style.display = 'block';
+    }
+});
+
+// Закрытие выпадающего списка при клике вне его
+document.addEventListener('click', function(e) {
+    if (!weekDropdownToggle.contains(e.target) && !weekDropdownContent.contains(e.target)) {
+        weekDropdownContent.style.display = 'none';
+    }
+});
+
+// ========================================
+// ОБНОВЛЕНИЕ НОМЕРА НЕДЕЛИ В ФОРМАХ ОТЗЫВОВ И ОТОБРАЖЕНИЯ ТЕКСТА
+// ========================================
+function updateReviewWeekOffsets() {
+    // Обновляем скрытые поля с номером недели во всех формах отзывов
+    document.querySelectorAll('input[name="week_offset"]').forEach(input => {
+        input.value = currentWeekOffset;
+    });
+
+    // Обновляем текст отзывов для текущей недели
+    updateReviewsDisplay();
+}
+
+function updateReviewsDisplay() {
+    // Получаем все отзывы из сервера (строковые ключи)
+    const allReviews = {{ user_reviews_all | tojson }};
+
+    // Обновляем текст отзывов для каждой формы
+    document.querySelectorAll('.review-form').forEach(form => {
+        const dayInput = form.querySelector('input[name="day"]');
+        const mealTypeInput = form.querySelector('input[name="meal_type"]');
+        const weekOffsetInput = form.querySelector('input[name="week_offset"]');
+        const textarea = form.querySelector('textarea[name="text"]');
+
+        if (dayInput && mealTypeInput && weekOffsetInput && textarea) {
+            const day = dayInput.value;
+            const mealType = mealTypeInput.value;
+            const weekOffset = parseInt(weekOffsetInput.value);
+
+            // === ВЫЧИСЛЯЕМ АБСОЛЮТНЫЙ НОМЕР НЕДЕЛИ ===
+            const today = new Date();
+            const currentWeekStart = new Date(today);
+            // Находим понедельник текущей недели
+            const diff = today.getDate() - ((today.getDay() + 6) % 7);
+            currentWeekStart.setDate(diff);
+
+            // Добавляем смещение недели
+            const reviewWeekStart = new Date(currentWeekStart);
+            reviewWeekStart.setDate(currentWeekStart.getDate() + weekOffset * 7);
+
+            // Получаем год и номер недели ISO
+            const isoYear = reviewWeekStart.getFullYear();
+            const isoWeek = getISOWeekNumber(reviewWeekStart);
+
+            // === ФОРМИРУЕМ КЛЮЧ НА ОСНОВЕ АБСОЛЮТНЫХ ЗНАЧЕНИЙ ===
+            const reviewKey = `${day}_${mealType}_${isoYear}_${isoWeek}`;
+
+            // Ищем отзыв в данных
+            textarea.value = allReviews[reviewKey] || '';
+        }
+    });
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ СТАТУСОВ ОТЗЫВОВ ПРИ ПЕРЕКЛЮЧЕНИИ НЕДЕЛИ
+// ========================================
+function updateReviewStatuses() {
+    const orderStatus = {{ order_status | tojson }};
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const mealTypes = ['breakfast', 'lunch'];
+
+    days.forEach(day => {
+        mealTypes.forEach(mealType => {
+            const key = `${day}_${mealType}_${currentWeekOffset}`;
+            const status = orderStatus[key];
+            const reviewMessageDiv = document.querySelector(`#day-${day} .review-status-message`);
+
+            if (!reviewMessageDiv) return;
+
+            const notConsumedDiv = reviewMessageDiv.querySelector('.status-not-consumed');
+            const notPaidDiv = reviewMessageDiv.querySelector('.status-not-paid');
+
+            // Скрываем все сообщения
+            if (notConsumedDiv) notConsumedDiv.style.display = 'none';
+            if (notPaidDiv) notPaidDiv.style.display = 'none';
+
+            if (status) {
+                if (status.paid && status.consumed) {
+                    // Оплачен и получен - форма отзыва уже отображается
+                    const form = document.querySelector(`#day-${day} form[data-day="${day}"][data-meal-type="${mealType}"]`);
+                    if (form) form.style.display = 'block';
+                } else if (status.paid && !status.consumed) {
+                    // Оплачен, но не получен
+                    if (notConsumedDiv) notConsumedDiv.style.display = 'block';
+                    if (notPaidDiv) notPaidDiv.style.display = 'none';
+                } else {
+                    // Не оплачен
+                    if (notConsumedDiv) notConsumedDiv.style.display = 'none';
+                    if (notPaidDiv) notPaidDiv.style.display = 'block';
+                }
+            } else {
+                // Заказ не существует
+                if (notConsumedDiv) notConsumedDiv.style.display = 'none';
+                if (notPaidDiv) notPaidDiv.style.display = 'block';
+            }
+        });
+    });
+}
+
+// Вспомогательная функция для вычисления номера недели ISO (1-53)
+function getISOWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    // Устанавливаем на четверг текущей недели (по стандарту ISO)
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    // Возвращаем номер недели
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ ДОСТУПНОСТИ ФОРМ ОТЗЫВОВ (БЛОКИРОВКА БУДУЩИХ ДНЕЙ)
+// ========================================
+function updateReviewFormsAvailability() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Обнуляем время для точного сравнения
+
+    // Вычисляем дату понедельника выбранной недели
+    const startOfWeek = new Date();
+    const now = new Date();
+
+    // ПРАВИЛЬНАЯ ФОРМУЛА: понедельник текущей недели + смещение
+    // (day + 6) % 7 преобразует: вс(0)→пн(-6), пн(1)→пн(0), вт(2)→пн(-1)...
+    const diff = now.getDate() - ((now.getDay() + 6) % 7);
+    startOfWeek.setDate(diff + currentWeekOffset * 7);
+
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    days.forEach((day, index) => {
+        // Вычисляем дату конкретного дня в выбранной неделе
+        const dayDate = new Date(startOfWeek);
+        dayDate.setDate(startOfWeek.getDate() + index);
+        dayDate.setHours(0, 0, 0, 0);
+
+        // Находим секцию дня
+        const daySection = document.getElementById(`day-${day}`);
+        if (!daySection) return;
+
+        // Находим все формы отзывов в секции
+        const reviewForms = daySection.querySelectorAll('.review-form');
+        reviewForms.forEach(form => {
+            const textarea = form.querySelector('textarea[name="text"]');
+            const button = form.querySelector('button[type="submit"]');
+            const futureMessage = form.querySelector('.future-review-message');
+
+            if (dayDate <= today) {
+                // День НЕ будущий - показываем форму
+                form.style.display = 'block';
+                if (textarea) textarea.disabled = false;
+                if (button) button.disabled = false;
+                if (futureMessage) futureMessage.style.display = 'none';
+            } else {
+                // Будущий день - скрываем форму, показываем сообщение
+                form.style.display = 'none';
+                if (futureMessage) futureMessage.style.display = 'block';
+            }
+        });
+
+        // Если нет форм отзывов (выходной), проверяем наличие сообщения о будущем дне
+        const futureMessage = daySection.querySelector('.future-review-message');
+        if (futureMessage) {
+            if (dayDate <= today) {
+                futureMessage.style.display = 'none';
+            } else {
+                futureMessage.style.display = 'block';
+            }
+        }
+    });
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ НЕДЕЛИ (С ВЫХОДНЫМИ И ПРОШЕДШИМИ ДНЯМИ)
+// ========================================
+function updateWeekDisplay() {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    // Вычисляем дату начала выбранной недели (с учётом смещения)
+    const diff = today.getDate() - ((today.getDay() + 6) % 7);
+    startOfWeek.setDate(diff + currentWeekOffset * 7);
+
+    // Определяем начало учебного года (1 сентября текущего или прошлого года)
+    const currentYear = today.getFullYear();
+    const septemberFirst = new Date(currentYear, 8, 1); // Месяцы в JS: 0=янв, 8=сен
+    const academicYearStart = (today >= septemberFirst) ? septemberFirst : new Date(currentYear - 1, 8, 1);
+    academicYearStart.setHours(0, 0, 0, 0);
+
+    // Обнуляем время для корректного сравнения
+    const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    // Обновляем даты для каждого дня (7 дней)
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    days.forEach((day, index) => {
+        const dayElement = document.querySelector(`.tab-btn[data-day="${day}"]`);
+        if (dayElement) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + index);
+
+            // Создаем дату без времени для сравнения
+            const dateWithoutTime = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            // Проверяем, является ли день выходным
+            const dayOfWeek = date.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Воскресенье или суббота
+
+            // Обновляем текст даты
+            const dateSpan = dayElement.querySelector('.day-date');
+            if (dateSpan) {
+                dateSpan.textContent = date.getDate();
+            }
+
+            // Управляем классами выходного дня
+            if (isWeekend) {
+                dayElement.classList.add('weekend');
+            } else {
+                dayElement.classList.remove('weekend');
+            }
+
+            // === ПРОВЕРКА НА ПРОШЕДШИЙ ДЕНЬ ===
+            // Убираем классы прошлого дня перед проверкой
+            dayElement.classList.remove('past-day');
+
+            // Проверяем, находится ли дата до начала учебного года
+            if (dateWithoutTime < academicYearStart) {
+                dayElement.classList.add('past-day');
+            }
+            // Проверяем по смещению недели
+            else if (currentWeekOffset < 0) {
+                // Вся неделя в прошлом (до текущей)
+                dayElement.classList.add('past-day');
+            } else if (currentWeekOffset === 0) {
+                // Текущая неделя: проверяем по дате
+                if (dateWithoutTime < todayWithoutTime) {
+                    dayElement.classList.add('past-day');
+                }
+            }
+            // Для будущих недель (currentWeekOffset > 0) класс не добавляем
+        }
+    });
+
+    // Обновляем активный день (текущий день недели) - только если текущая неделя
+    document.querySelectorAll('.tab-btn[data-day]').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.remove('today-tab');
+    });
+
+    // Если текущая неделя (смещение 0) и дата не раньше начала учебного года
+    if (currentWeekOffset === 0 && todayWithoutTime >= academicYearStart) {
+        // Определяем текущий день недели (0 = воскресенье, 6 = суббота)
+        const todayDay = today.getDay();
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const currentDay = dayNames[todayDay];
+
+        const currentDayBtn = document.querySelector(`.tab-btn[data-day="${currentDay}"]`);
+        if (currentDayBtn && !currentDayBtn.classList.contains('past-day')) {
+            currentDayBtn.classList.add('active', 'today-tab');
+            // Если сегодня выходной, добавляем особый стиль (но не для прошедших)
+            if (currentDay === 'saturday' || currentDay === 'sunday') {
+                currentDayBtn.classList.add('weekend');
+            }
+        }
+    }
+
+    // Обновляем статусы оплаты для текущей недели (только для недель 0-3)
+    updatePaymentStatuses();
+
+    // Обновляем отображение текущего диапазона
+    updateCurrentWeekRangeDisplay();
+
+    // Обновляем отзывы для текущей недели
+    updateReviewWeekOffsets();
+
+    updateReviewFormsAvailability();
+
+    updateReviewStatuses();
+}
+
+// ========================================
+// ОБНОВЛЕНИЕ СТАТУСОВ ОПЛАТЫ ПО НЕДЕЛЯМ (только для недель 0-3)
+// ========================================
+function updatePaymentStatuses() {
+    // Скрываем все статусы
+    document.querySelectorAll('.status-badge').forEach(badge => {
+        badge.style.display = 'none';
+        badge.classList.remove('status-paid', 'status-consumed');
+        badge.textContent = '';
+    });
+
+    // Для прошедших недель и недель дальше 3й будущей - не показываем статусы оплаты
+    if (currentWeekOffset < 0 || currentWeekOffset > 3) {
+        return;
+    }
+
+    const orderStatus = {{ order_status | tojson }};
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const mealTypes = ['breakfast', 'lunch'];
+
+    days.forEach(day => {
+        const daySection = document.getElementById('day-' + day);
+        if (!daySection) return;
+
+        mealTypes.forEach(mealType => {
+            // Ключ формата: "понедельник_завтрак_0"
+            const key = `${day}_${mealType}_${currentWeekOffset}`;
+            const status = orderStatus[key];
+
+            if (status) {
+                // Находим соответствующий элемент статуса
+                const mealItems = daySection.querySelectorAll('.meal-item');
+                mealItems.forEach(item => {
+                    const mealHeader = item.querySelector('.meal-header');
+                    if (!mealHeader) return;
+
+                    const isBreakfast = mealHeader.textContent.includes('🕗 Завтрак');
+                    const isLunch = mealHeader.textContent.includes('🕐 Обед');
+                    const mealMatch = (mealType === 'breakfast' && isBreakfast) ||
+                                     (mealType === 'lunch' && isLunch);
+
+                    if (mealMatch) {
+                        const badge = item.querySelector('.status-badge');
+                        if (badge) {
+                            badge.style.display = 'inline-block';
+                            if (status.consumed) {
+                                badge.classList.add('status-consumed');
+                                badge.textContent = 'Получено';
+                            } else if (status.paid) {
+                                badge.classList.add('status-paid');
+                                badge.textContent = 'Оплачено';
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
+// ========================================
+// ПЕРЕКЛЮЧЕНИЕ ДНЕЙ В МЕНЮ
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tab-btn[data-day]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.day-section').forEach(d => d.classList.remove('active'));
+            this.classList.add('active');
+
+            const day = this.dataset.day;
+            document.getElementById('day-' + day).classList.add('active');
+
+            // Добавляем класс выходного дня для секции
+            document.querySelectorAll('.day-section').forEach(sec => {
+                sec.classList.remove('weekend-section');
+            });
+
+            if (day === 'saturday' || day === 'sunday') {
+                document.getElementById('day-' + day).classList.add('weekend-section');
+            }
+        });
+    });
+});
+
+// ========================================
+// ОБНОВЛЕНИЕ ЦЕН ПРИ ВЫБОРЕ ДНЯ И ПРИЁМА
+// ========================================
+const mealPrices = {{ meals | tojson }};
+const daySelect = document.getElementById('pay-day-select');
+const mealSelect = document.getElementById('pay-meal-select');
+
+function updateMealOptions() {
+    if (!daySelect || !mealSelect) return;
+
+    const selectedDay = daySelect.value;
+    const breakfastOpt = mealSelect.options[0];
+    const lunchOpt = mealSelect.options[1];
+
+    // Получаем цены для выбранного дня
+    const breakfastPrice = mealPrices[selectedDay]?.breakfast?.price || 0;
+    const lunchPrice = mealPrices[selectedDay]?.lunch?.price || 0;
+
+    // Обновляем текст и data-price
+    breakfastOpt.textContent = `🕗 Завтрак (${breakfastPrice} ₽)`;
+    breakfastOpt.dataset.price = breakfastPrice;
+    lunchOpt.textContent = `🕐 Обед (${lunchPrice} ₽)`;
+    lunchOpt.dataset.price = lunchPrice;
+
+    // Также обновляем кнопку оплаты
+    updatePayButton();
+}
+
+function updatePayButton() {
+    if (!daySelect || !mealSelect) return;
+
+    const day = daySelect.value;
+    const meal = mealSelect.value;
+    const key = day + '_' + meal;
+    const paidMeals = {{ paid_keys_simple | tojson }};
+    const isPaid = paidMeals.includes(key);
+
+    const button = document.getElementById('single-pay-btn');
+    if (button) {
+        button.disabled = isPaid;
+        button.textContent = isPaid ? '✅ Уже оплачено' : '💳 Оплатить разово';
+    }
+}
+
+// ========================================
+// ЗАГРУЗКА АВАТАРКИ
+// ========================================
+const avatarInput = document.getElementById('avatar-input');
+const avatarFileInput = document.getElementById('avatar-file-input');
+const avatarPreview = document.getElementById('avatar-preview');
+const avatarForm = document.getElementById('avatar-upload-form');
+
+if (avatarInput && avatarFileInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Показываем превью
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                avatarPreview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Копируем файл в скрытый инпут и отправляем форму
+            avatarFileInput.files = e.target.files;
+            avatarForm.submit();
+        }
+    });
+}
+
+// ========================================
+// СОБЫТИЯ И ИНИЦИАЛИЗАЦИЯ
+// ========================================
+if (daySelect) daySelect.addEventListener('change', updateMealOptions);
+if (mealSelect) mealSelect.addEventListener('change', updatePayButton);
+
+// Переключение секций меню
+document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', function() {
+        // Убираем активный класс у всех
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+
+        // Добавляем активный класс текущему
+        this.classList.add('active');
+
+        // Показываем соответствующую секцию
+        const sectionId = this.dataset.section;
+        document.getElementById(sectionId).classList.add('active');
+    });
+});
+
+// Инициализация выпадающего списка
+updateWeekDropdown();
+
+// Инициализация отображения недели
+updateWeekDisplay();
+</script>
+{% endblock %}

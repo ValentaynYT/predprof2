@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+{% block title %}Управление оплатами{% endblock %}
+{% block header_title %}💰 Управление оплатами{% endblock %}
+{% block extra_css %}
+<style>
+.payments-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
+}
+
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.table th {
+    background: #f8f9ff;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table tbody tr:hover {
+    background: #f8f9ff;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #a2d9a3;
+    color: #2e7d32;
+}
+
+.status-inactive {
+    background: #fab1a0;
+    color: #c62828;
+}
+
+.status-paid {
+    background: #a2d9a3;
+    color: #2e7d32;
+}
+
+.status-cancelled {
+    background: #fab1a0;
+    color: #c62828;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.btn-cancel {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #c0392b;
+}
+
+.btn-add {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-add:hover {
+    background: #27ae60;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2b2d42;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: #4361ee;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-submit:hover {
+    background: #3a56e4;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #4361ee;
+    border-bottom-color: #4361ee;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #f8f9ff;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #4361ee;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2b2d42;
+    margin: 8px 0;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Стили для формы добавления оплаты */
+.payment-form {
+    background: #f8f9ff;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e0e6ff;
+    margin-top: 20px;
+}
+
+.payment-type-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.payment-type-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.payment-type-btn.active {
+    border-color: #4361ee;
+    background: #e8f4ff;
+    color: #4361ee;
+    box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+}
+
+.form-section {
+    display: none;
+}
+
+.form-section.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Flash-сообщения -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div style="
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                background: {% if category == 'error' %}#e74c3c
+                {% elif category == 'warning' %}#f39c12
+                {% else %}#2ecc71{% endif %};
+            ">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<a href="/admin" class="back-link">← Назад в панель администратора</a>
+
+<!-- Статистика -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-label">Гибких абонементов</div>
+        <div class="stat-value">{{ total_flexible }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Разовых оплат</div>
+        <div class="stat-value">{{ total_orders }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Учеников</div>
+        <div class="stat-value">{{ total_students }}</div>
+    </div>
+</div>
+
+<!-- Табы -->
+<div class="tabs">
+    <button class="tab-btn active" data-tab="subscriptions">🎫 Гибкие абонементы</button>
+    <button class="tab-btn" data-tab="orders">🍽️ Разовые оплаты</button>
+</div>
+
+<!-- Гибкие абонементы -->
+<div id="subscriptions" class="tab-content active">
+    <div class="card">
+        <h2>🎫 Гибкие абонементы ({{ flexible_subs|length }})</h2>
+        {% if flexible_subs %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ученик</th>
+                            <th>Класс</th>
+                            <th>Период</th>
+                            <th>Приёмов</th>
+                            <th>Стоимость</th>
+                            <th>Действует до</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in flexible_subs %}
+                            <tr>
+                                <td>{{ sub.student.full_name }}</td>
+                                <td>{{ sub.student.class_name or '—' }}</td>
+                                <td>{{ sub.days_count }} дней</td>
+                                <td>{{ sub.total_meals }}</td>
+                                <td>{{ "%.2f"|format(sub.total_price) }} ₽</td>
+                                <td>{{ sub.expires_at.strftime('%d.%m.%Y') }}</td>
+                                <td>
+                                    <span class="status-badge {% if sub.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                        {% if sub.is_active %}Активен{% else %}Отменён{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if sub.is_active %}
+                                        <div class="btn-group">
+                                            <button class="btn btn-cancel" onclick="cancelFlexibleSub({{ sub.id }}, '{{ sub.student.full_name|replace("'", "\\'") }}')">
+                                                Отменить
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <span style="color: #6c757d;">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>Нет гибких абонементов</h3>
+                <p>Ученики ещё не оформили ни одного гибкого абонемента</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Разовые оплаты -->
+<div id="orders" class="tab-content">
+    <div class="card">
+        <h2>🍽️ Разовые оплаты ({{ orders|length }})</h2>
+        {% if orders %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ученик</th>
+                            <th>Класс</th>
+                            <th>День</th>
+                            <th>Дата</th>  <!-- НОВЫЙ СТОЛБЕЦ -->
+                            <th>Приём</th>
+                            <th>Блюдо</th>
+                            <th>Стоимость</th>
+                            <th>Дата оплаты</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                            <tr>
+                                <td>{{ order.student.full_name }}</td>
+                                <td>{{ order.student.class_name or '—' }}</td>
+                                <td>{{ day_names.get(order.day_of_week, order.day_of_week) }}</td>
+                                <td><strong>{{ order.serving_date.strftime('%d.%m.%Y') }}</strong></td>  <!-- НОВАЯ ЯЧЕЙКА -->
+                                <td>{{ "🕗 Завтрак" if order.meal_type == "breakfast" else "🕐 Обед" }}</td>
+                                <td>{{ order.meal_name[:30] }}{% if order.meal_name|length > 30 %}...{% endif %}</td>
+                                <td>{{ "%.2f"|format(order.meal_price) }} ₽</td>
+                                <td>{{ order.paid_at.strftime('%d.%m.%Y %H:%M') if order.paid_at else '—' }}</td>
+                                <td>
+                                    {% if order.status == 'cancelled' %}
+                                        <span class="status-badge status-cancelled">Отменён</span>
+                                    {% elif order.is_collected %}
+                                        <span class="status-badge status-paid">Выдан</span>
+                                    {% else %}
+                                        <span class="status-badge status-paid">Оплачен</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.status == 'paid' and not order.is_collected %}
+                                        <div class="btn-group">
+                                            <button class="btn btn-cancel" onclick="cancelOrder({{ order.id }}, '{{ order.student.full_name|replace("'", "\\'") }}')">
+                                                Отменить
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <span style="color: #6c757d;">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>Нет разовых оплат</h3>
+                <p>Ученики ещё не совершили ни одной разовой оплаты</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения отмены -->
+<div id="cancel-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="cancel-modal-title">Подтверждение отмены</h3>
+            <button class="close-modal" onclick="closeCancelModal()">&times;</button>
+        </div>
+        <div id="cancel-modal-message" style="margin-bottom: 20px; line-height: 1.5;"></div>
+
+        <!-- ФОРМА ДЛЯ ОТПРАВКИ -->
+        <form id="cancel-form" method="post">
+            <input type="hidden" id="cancel-item-id" name="item_id">
+            <button type="submit" class="btn-submit">✅ Да, отменить</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Переключение табов
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Закрытие модального окна по клику вне его
+    const modal = document.getElementById('cancel-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeCancelModal();
+            }
+        });
+    }
+
+});
+
+// Отмена гибкого абонемента
+function cancelFlexibleSub(subId, studentName) {
+    document.getElementById('cancel-modal-title').textContent = 'Отмена гибкого абонемента';
+    document.getElementById('cancel-modal-message').innerHTML = `
+        <strong>Вы уверены, что хотите отменить гибкий абонемент?</strong><br>
+        Ученик: <strong>${studentName}</strong><br>
+        Средства будут возвращены на баланс ученика.
+    `;
+    document.getElementById('cancel-item-id').value = subId;
+    document.getElementById('cancel-form').action = `/admin/payment/flexible/${subId}/cancel`;
+    document.getElementById('cancel-modal').classList.add('show');
+}
+
+// Отмена разовой оплаты
+function cancelOrder(orderId, studentName) {
+    document.getElementById('cancel-modal-title').textContent = 'Отмена оплаты';
+    document.getElementById('cancel-modal-message').innerHTML = `
+        <strong>Вы уверены, что хотите отменить оплату?</strong><br>
+        Ученик: <strong>${studentName}</strong><br>
+        Средства будут возвращены на баланс ученика.
+    `;
+    document.getElementById('cancel-item-id').value = orderId;
+    document.getElementById('cancel-form').action = `/admin/payment/order/${orderId}/cancel`;
+    document.getElementById('cancel-modal').classList.add('show');
+}
+
+// Закрытие модального окна
+function closeCancelModal() {
+    document.getElementById('cancel-modal').classList.remove('show');
+}
+
+// Валидация формы перед отправкой
+document.querySelector('form.payment-form').addEventListener('submit', function(e) {
+    const paymentType = document.getElementById('payment-type-input').value;
+
+    if (paymentType === 'balance') {
+        const amountInput = document.querySelector('input[name="amount"]');
+        const amount = parseFloat(amountInput.value);
+
+        if (!amount || amount <= 0) {
+            e.preventDefault();
+            alert('Пожалуйста, введите корректную сумму пополнения');
+            amountInput.focus();
+            return false;
+        }
+    } else if (paymentType === 'order') {
+        const servingDate = document.querySelector('input[name="serving_date"]').value;
+        const mealType = document.querySelector('select[name="meal_type"]').value;
+
+        if (!servingDate || !mealType) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите дату и тип приёма пищи');
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

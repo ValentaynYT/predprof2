@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block header_title %}Школьное питание{% endblock %}
+{% block extra_css %}
+<style>
+    .password-wrapper {
+        position: relative;
+    }
+    .toggle-password {
+        position: absolute;
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        margin: 0;
+    }
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    .card h2 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+    .flash-message {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+    }
+    .flash-success { background: #2ecc71; }
+    .flash-error { background: #e74c3c; }
+    .flash-info { background: #3498db; }
+    .flash-warning { background: #f39c12; }
+
+    /* Ссылка на регистрацию */
+    .register-link {
+        display: block;
+        margin-top: 15px;
+        text-align: center;
+        color: #4361ee;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .register-link:hover {
+        text-decoration: underline;
+    }
+    .register-link span {
+        color: #6c757d;
+        font-weight: normal;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<div class="card">
+    <h2>Вход в систему</h2>
+    <form method="post">
+        <label>Email</label>
+        <input name="email" type="email" required>
+        <label>Пароль</label>
+        <div class="password-wrapper">
+            <input name="password" type="password" id="login-password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('login-password')">
+                👁️
+            </button>
+        </div>
+        <button>Войти</button>
+    </form>
+    <a href="/register" class="register-link">
+        <span>Нет аккаунта?</span> Зарегистрироваться
+    </a>
+</div>
+<script>
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = field.nextElementSibling;
+        if (field.type === "password") {
+            field.type = "text";
+            button.textContent = "🙈";
+        } else {
+            field.type = "password";
+            button.textContent = "👁️";
+        }
+    }
+</script>
+{% endblock %}

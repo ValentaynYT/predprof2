@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Школьное питание{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+    <style>
+        /* Уведомления в шапке */
+        .notifications-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notifications-bell {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4361ee;
+            position: relative;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .notifications-bell:hover {
+            background: #f0f4ff;
+            transform: scale(1.1);
+        }
+
+        .notifications-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .notifications-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 360px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            border: 1px solid #dee2e6;
+        }
+
+        .notifications-dropdown-menu.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notifications-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notifications-header a {
+            font-size: 0.9rem;
+            color: #4361ee;
+            text-decoration: none;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: start;
+        }
+
+        .notification-item:hover {
+            background: #f8f9ff;
+        }
+
+        .notification-item.unread {
+            background: #e8f4ff;
+            border-left: 3px solid #4361ee;
+        }
+
+        .notification-item-icon {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            min-width: 24px;
+        }
+
+        .notification-item-content {
+            flex: 1;
+        }
+
+        .notification-item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0 0 4px 0;
+            color: #2c3e50;
+        }
+
+        .notification-item-message {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .notification-item-time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+            margin-top: 4px;
+        }
+
+        .notifications-empty {
+            padding: 24px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .notifications-empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Flash-сообщения */
+        .flash-message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .flash-success {
+            background: #2ecc71;
+        }
+
+        .flash-error {
+            background: #e74c3c;
+        }
+
+        .flash-info {
+            background: #3498db;
+        }
+
+        .flash-warning {
+            background: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{% block header_title %}{% endblock %}</h1>
+
+        <!-- 🔔 Уведомления (будет видно на всех страницах для авторизованных) -->
+        {% if current_user.is_authenticated %}
+        <div class="notifications-dropdown" style="position: absolute; right: 20px; top: 20px;">
+            <button id="notifications-bell" class="notifications-bell" title="Уведомления">
+                🔔
+                <span id="notifications-badge" class="notifications-badge" style="display: none;">0</span>
+            </button>
+
+            <div id="notifications-dropdown-menu" class="notifications-dropdown-menu">
+                <div class="notifications-header">
+                    <span>Уведомления</span>
+                    <a href="/notifications">Все уведомления →</a>
+                </div>
+                <div id="notifications-list">
+                    <!-- Загрузится динамически -->
+                    <div style="padding: 24px; text-align: center; color: #6c757d;">
+                        <div style="font-size: 2rem; margin-bottom: 12px;">⏳</div>
+                        <p>Загрузка...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+
+        {% if current_user.is_authenticated %}
+        <a href="/logout" class="logout-link">🚪 Выйти</a>
+        {% endif %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Скрипт уведомлений (на всех страницах) -->
+    {% if current_user.is_authenticated %}
+    <script src="/static/js/notifications.js"></script>
+    {% endif %}
+</body>
+</html>

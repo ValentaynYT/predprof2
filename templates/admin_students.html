@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Ученики{% endblock %}
+{% block header_title %}👥 Ученики{% endblock %}
+{% block extra_css %}
+<style>
+.student-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s;
+}
+.student-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+.student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.student-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2b2d42;
+}
+.student-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+.info-item {
+    background: #f8f9ff;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid #4361ee;
+}
+.info-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+.info-value {
+    font-weight: 500;
+    color: #2b2d42;
+}
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+.btn-edit {
+    background: #4361ee;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.btn-edit:hover {
+    background: #3a56e4;
+}
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.btn-delete:hover {
+    background: #c0392b;
+}
+.add-student-btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.add-student-btn:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+}
+.flash-message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+}
+.flash-success { background: #2ecc71; }
+.flash-error { background: #e74c3c; }
+.flash-info { background: #3498db; }
+.flash-warning { background: #f39c12; }
+.archive-link {
+    display: inline-block;
+    background: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+.archive-link:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+.archive-link span {
+    margin-left: 8px;
+}
+
+/* Стиль для поля поиска */
+#search-students {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+#search-students:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+#search-students::placeholder {
+    color: #6c757d;
+}
+
+/* Стиль для сообщения "Ничего не найдено" */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    display: none;
+}
+.no-results.show {
+    display: block;
+}
+.no-results-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+.flexible-sub-active {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+.flexible-sub-inactive {
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+{% block content %}
+<!-- 📢 FLASH-СООБЩЕНИЯ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<a href="/admin" class="back-link">← Назад в панель администратора</a>
+
+<h2>Список учеников ({{ students|length }})</h2>
+
+<input type="text" id="search-students" placeholder="Поиск по ФИО...">
+
+<!-- Сообщение "Ничего не найдено" -->
+<div id="no-results" class="no-results">
+    <div class="no-results-icon">🔍</div>
+    <p>Ничего не найдено</p>
+</div>
+
+{% if students %}
+    {% for item in students %}
+        <div class="student-card" data-name="{{ item.student.full_name | lower }}">
+            <div class="student-header">
+                <div class="student-name">
+                    {{ item.student.full_name }}
+                </div>
+                <div class="btn-group">
+                    <button class="btn-edit" onclick="window.location.href='/admin/student/{{ item.student.id }}/edit'">
+                        ✏️ Редактировать
+                    </button>
+                    <button class="btn-delete" onclick="confirmDelete({{ item.student.id }}, '{{ item.student.full_name }}')">
+                        🗑️ Удалить
+                    </button>
+                </div>
+            </div>
+
+            <div class="student-info">
+                <div class="info-item">
+                    <div class="info-label">Класс</div>
+                    <div class="info-value">{{ item.student.class_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ item.student.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Баланс</div>
+                    <div class="info-value">{{ "%.2f"|format(item.student.balance) }} ₽</div>
+                </div>
+                <!-- ДОБАВЛЯЕМ ИНФОРМАЦИЮ О ГИБКОМ АБОНЕМЕНТЕ -->
+                <div class="info-item">
+                    <div class="info-label">Гибкий абонемент</div>
+                    <div class="info-value {% if item.flexible_sub %}flexible-sub-active{% else %}flexible-sub-inactive{% endif %}">
+                        {% if item.flexible_sub %}
+                            ✅ Активен до {{ item.flexible_sub.expires_at.strftime('%d.%m.%Y') }}<br>
+                            💰 Стоимость: {{ "%.2f"|format(item.flexible_sub.total_price) }} ₽<br>
+                            🍽️ Приёмы: {{ item.flexible_sub.total_meals }}
+                        {% else %}
+                            ❌ Нет
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Аллергии</div>
+                    <div class="info-value">{{ item.allergy }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата регистрации</div>
+                    <div class="info-value">
+                        {{ item.student.timestamp.strftime('%d.%m.%Y') if item.student.timestamp else '—' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div style="text-align: center; padding: 40px; color: #6c757d;">
+        <div style="font-size: 3rem; margin-bottom: 16px;">📭</div>
+        <p>Нет учеников</p>
+    </div>
+{% endif %}
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function confirmDelete(studentId, studentName) {
+    if (confirm(`Вы уверены, что хотите удалить ученика "${studentName}"? Это действие нельзя отменить!`)) {
+        // Создаём форму и отправляем POST запрос
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/student/${studentId}/delete`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Функция поиска по ФИО
+function searchStudents() {
+    const searchTerm = document.getElementById('search-students').value.toLowerCase().trim();
+    const studentCards = document.querySelectorAll('.student-card');
+    const noResultsDiv = document.getElementById('no-results');
+    let visibleCount = 0;
+
+    studentCards.forEach(card => {
+        const studentName = card.getAttribute('data-name');
+
+        if (searchTerm === '' || studentName.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Показываем/скрываем сообщение "Ничего не найдено"
+    if (visibleCount === 0 && searchTerm !== '') {
+        noResultsDiv.classList.add('show');
+    } else {
+        noResultsDiv.classList.remove('show');
+    }
+}
+
+// Добавляем обработчик события на поле поиска
+document.getElementById('search-students').addEventListener('input', searchStudents);
+</script>
+{% endblock %}

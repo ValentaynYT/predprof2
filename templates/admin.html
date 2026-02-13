@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% block title %}Панель администратора{% endblock %}
+{% block header_title %}👨‍💼 Панель администратора{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Боковая панель навигации */
+    .admin-layout {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+
+    .sidebar-menu {
+        width: 250px;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        flex-shrink: 0;
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #495057;
+        border-left: 3px solid transparent;
+    }
+
+    .menu-item:hover {
+        background: #f8f9ff;
+        color: #4361ee;
+    }
+
+    .menu-item.active {
+        background: #e8f4ff;
+        color: #4361ee;
+        border-left-color: #4361ee;
+        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+    }
+
+    .menu-item i {
+        font-size: 1.2rem;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    /* Контентная область */
+    .content-area {
+        flex: 1;
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+
+    .content-section {
+        display: none;
+    }
+
+    .content-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Личная информация */
+    .personal-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .info-item {
+        background: #f8f9ff;
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 3px solid #4361ee;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #2b2d42;
+    }
+
+    /* Аватарка */
+    .avatar-container {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .avatar-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #4361ee;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #4361ee;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Статистика */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .stat-card {
+        background: #f0f4ff;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid #4361ee;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #2b2d42;
+        margin: 8px 0;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    /* Секции управления */
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+
+    .section-card h2, .section-card h3 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+
+    .menu-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        padding: 12px 20px;
+        background: #e0e0ff;
+        color: #4361ee;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+
+    .menu-link:hover {
+        background: #d0d0ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
+    }
+
+    /* Посещаемость учеников */
+    .student-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        align-items: center;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #2b2d42;
+    }
+
+    .student-stats {
+        text-align: right;
+        width: 120px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 4px;
+        margin-top: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #4361ee;
+    }
+
+    /* Заявки на закупку */
+    .request-card {
+        background: #fff8e1;
+        border-left: 4px solid #ffc107;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .request-product {
+        font-weight: 600;
+        color: #856404;
+    }
+
+    .request-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #ffeaa7;
+        color: #d63031;
+    }
+
+    .status-approved {
+        background: #a2d9a3;
+        color: #2e7d32;
+    }
+
+    .status-rejected {
+        background: #fab1a0;
+        color: #c62828;
+    }
+
+    /* Flash-сообщения */
+    .flash-message {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+    }
+
+    .flash-success {
+        background: #2ecc71;
+    }
+
+    .flash-error {
+        background: #e74c3c;
+    }
+
+    .flash-info {
+        background: #3498db;
+    }
+
+    .flash-warning {
+        background: #f39c12;
+    }
+
+    .centered-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- 📢 FLASH-СООБЩЕНИЯ -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category if category in ['success', 'error'] else 'info' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-layout">
+        <!-- Боковое меню -->
+        <div class="sidebar-menu">
+            <div class="menu-item active" data-section="personal-info">
+                <span>👤</span>
+                <span>Личная информация</span>
+            </div>
+            <div class="menu-item" data-section="statistics">
+                <span>📊</span>
+                <span>Статистика</span>
+            </div>
+            <div class="menu-item" data-section="menu-management">
+                <span>🍽️</span>
+                <span>Управление меню</span>
+            </div>
+            <div class="menu-item" data-section="students-management">
+                <span>👥</span>
+                <span>Ученики</span>
+            </div>
+            <div class="menu-item" data-section="payments">
+                <span>💸</span>
+                <span>Оплаты</span>
+            </div>
+            <div class="menu-item" data-section="product-prices">
+                <span>💰</span>
+                <span>Цены на продукты</span>
+            </div>
+            <div class="menu-item" data-section="reports">
+                <span>📈</span>
+                <span>Отчёты</span>
+            </div>
+            <div class="menu-item" data-section="purchase-requests">
+                <span>📦</span>
+                <span>Заявки на закупку</span>
+            </div>
+        </div>
+
+        <!-- Контентная область -->
+        <div class="content-area">
+            <!-- Личная информация -->
+            <div id="personal-info" class="content-section active">
+                <h2>👤 Личная информация</h2>
+
+                <!-- Аватарка -->
+                <div class="avatar-container">
+                    <div style="position: relative; display: inline-block;">
+                        <img
+                            src="{{ url_for('static', filename='avatars/' + current_user.avatar_filename) }}"
+                            alt="Аватарка"
+                            class="avatar-img"
+                            id="avatar-preview"
+                        >
+                        <label for="avatar-input" class="avatar-edit-btn" style="cursor: pointer;">
+                            ✏️
+                            <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                    <p style="margin-top: 12px; color: #6c757d; font-size: 0.9rem;">
+                        Нажмите на ✏️ чтобы изменить аватарку
+                    </p>
+
+                    <!-- Форма загрузки (скрыта, отправляется через JS) -->
+                    <form id="avatar-upload-form" method="post" action="/upload_avatar" enctype="multipart/form-data" style="display: none;">
+                        <input type="file" name="avatar" id="avatar-file-input" accept="image/*">
+                    </form>
+                </div>
+
+                <div class="personal-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">ФИО</div>
+                        <div class="info-value">{{ current_user.full_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ current_user.email }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Дата регистрации</div>
+                        <div class="info-value">
+                            {% if current_user.timestamp %}
+                                {{ current_user.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div id="statistics" class="content-section">
+                <h2>📊 Статистика за неделю: {{ week_range }}</h2>
+
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Оплачено приёмов</div>
+                        <div class="stat-value">{{ total_paid }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Получено</div>
+                        <div class="stat-value">{{ total_consumed }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Учеников</div>
+                        <div class="stat-value">{{ total_students }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Макс. возможно</div>
+                        <div class="stat-value">{{ total_students * 10 }}</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 16px;">👥 Посещаемость учеников</h3>
+
+                {% if student_stats %}
+                    {% for item in student_stats %}
+                        <div class="student-row">
+                            <div class="student-name">
+                                {{ item.student.full_name }}
+                                <br>
+                                <small style="color: #6c757d; font-weight: normal;">
+                                    Оплачено: {{ item.paid }}, Получено: {{ item.consumed }}
+                                </small>
+                            </div>
+                            <div class="student-stats">
+                                {{ item.attendance_pct }}%
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ item.attendance_pct }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #6c757d; text-align: center; padding: 20px;">Нет учеников</p>
+                {% endif %}
+            </div>
+
+            <!-- Управление меню -->
+            <div id="menu-management" class="content-section">
+                <h2>🍽️ Управление меню</h2>
+                <div class="centered-button">
+                    <a href="/admin/menu" class="menu-link">✏️ Редактировать меню на неделю</a>
+                </div>
+            </div>
+
+            <!-- Управление учениками -->
+            <div id="students-management" class="content-section">
+                <h2>👥 Управление учениками</h2>
+                <div class="centered-button">
+                    <a href="/admin/students" class="menu-link">📋 Список учеников</a>
+                </div>
+                <div class="centered-button">
+                    <a href="/admin/student/add" class="menu-link" style="background: #2ecc71; color: white;">➕ Добавить нового ученика</a>
+                </div>
+                <div class="centered-button">
+                    <a href="/admin/students/archived" class="menu-link" style="background: #6c757d; color: white;">
+                        🗄️ Архив учеников
+                        {% if archived_count and archived_count > 0 %}
+                            <span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-size: 0.8rem;">
+                                {{ archived_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+
+            <div id="payments" class="content-section">
+                <h2>💸 Управление оплатами</h2>
+                <div class="centered-button">
+                    <a href="/admin/payments" class="menu-link">💳 Просмотреть все оплаты</a>
+                </div>
+            </div>
+
+            <!-- Цены на продукты -->
+            <div id="product-prices" class="content-section">
+                <h2>💰 Цены на продукты</h2>
+                <div class="centered-button">
+                    <a href="/admin/prices" class="menu-link">✏️ Редактировать цены на продукты</a>
+                </div>
+            </div>
+
+            <!-- Отчёты -->
+            <div id="reports" class="content-section">
+                <h2>📈 Финансовые отчёты</h2>
+                <div class="centered-button">
+                    <a href="/admin/reports" class="menu-link">📊 Просмотр отчётов</a>
+                </div>
+            </div>
+
+            <!-- Заявки на закупку -->
+            <div id="purchase-requests" class="content-section">
+                <h2>📦 Заявки на закупку</h2>
+
+                {% if requests %}
+                    {% for r in requests %}
+                        <div class="request-card">
+                            <div class="request-header">
+                                <span class="request-product">{{ r.product }} — {{ r.quantity }} {{ r.unit }}</span>
+                                <span class="request-status status-{{ r.status }}">
+                                    {% if r.status == "pending" %}На рассмотрении
+                                    {% elif r.status == "approved" %}✅ Одобрено
+                                    {% elif r.status == "rejected" %}❌ Отклонено
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <form method="post" style="margin-top: 12px;">
+                                <input type="hidden" name="id" value="{{ r.id }}">
+                                <select name="status" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-right: 8px;">
+                                    <option value="approved" {% if r.status == "approved" %}selected{% endif %}>✅ Одобрить</option>
+                                    <option value="rejected" {% if r.status == "rejected" %}selected{% endif %}>❌ Отклонить</option>
+                                </select>
+                                <button type="submit" style="padding: 6px 12px; background: #4361ee; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    💾 Сохранить
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; color: #6c757d; padding: 20px;">Нет заявок на закупку</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Переключение секций меню
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+            // Убираем активный класс у всех
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+
+            // Добавляем активный класс текущему
+            this.classList.add('active');
+
+            // Показываем соответствующую секцию
+            const sectionId = this.dataset.section;
+            document.getElementById(sectionId).classList.add('active');
+        });
+    });
+
+    // Загрузка аватарки
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarForm = document.getElementById('avatar-upload-form');
+
+    if (avatarInput && avatarFileInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Показываем превью
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    avatarPreview.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Копируем файл в скрытый инпут и отправляем форму
+                avatarFileInput.files = e.target.files;
+                avatarForm.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

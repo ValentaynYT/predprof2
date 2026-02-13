@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Архив учеников{% endblock %}
+{% block header_title %}🗄️ Архив учеников{% endblock %}
+{% block extra_css %}
+<style>
+.archived-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border-left: 4px solid #6c757d;
+    transition: all 0.3s;
+}
+.archived-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.archived-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-decoration: line-through;
+}
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+.info-item {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+}
+.info-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+.info-value {
+    font-weight: 500;
+    color: #495057;
+}
+.refund-badge {
+    background: #2ecc71;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Стиль для поля поиска */
+#search-students {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+#search-students:focus {
+    outline: none;
+    border-color: #6c757d;
+    box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.1);
+}
+#search-students::placeholder {
+    color: #6c757d;
+}
+
+/* Стиль для сообщения "Ничего не найдено" */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    display: none;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.no-results.show {
+    display: block;
+}
+.no-results-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+{% block content %}
+<a href="/admin" class="back-link">← Назад в панель администратора</a>
+
+<h2>🗄️ Архив учеников ({{ students|length }})</h2>
+<p style="color: #6c757d; margin-bottom: 24px;">
+    Здесь находятся архивированные ученики. Их данные сохранены, но они не могут войти в систему.
+</p>
+
+<input type="text" id="search-students" placeholder="Поиск по ФИО в архиве...">
+
+<!-- Сообщение "Ничего не найдено" -->
+<div id="no-results" class="no-results">
+    <div class="no-results-icon">🔍</div>
+    <p>Ничего не найдено</p>
+</div>
+
+{% if students %}
+    {% for item in students %}
+        <div class="archived-card" data-name="{{ item.student.full_name | lower }}">
+            <div class="archived-header">
+                <div class="archived-name">
+                    {{ item.student.full_name }}
+                </div>
+                {% if item.refund_amount > 0 %}
+                    <span class="refund-badge">💰 Возврат: {{ "%.2f"|format(item.refund_amount) }} ₽</span>
+                {% endif %}
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ item.student.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Класс</div>
+                    <div class="info-value">{{ item.student.class_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Баланс</div>
+                    <div class="info-value">{{ "%.2f"|format(item.student.balance) }} ₽</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Удалил</div>
+                    <div class="info-value">{{ item.deleted_by }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Дата удаления</div>
+                    <div class="info-value">
+                        {{ item.deleted_at.strftime('%d.%m.%Y %H:%M') if item.deleted_at else '—' }}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Абонемент</div>
+                    <div class="info-value">
+                        {% if item.student.has_subscription %}✅ Оплачен{% else %}❌ Нет{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>Архив пуст</h3>
+        <p>Здесь будут отображаться архивированные ученики</p>
+    </div>
+{% endif %}
+
+{% endblock %}
+{% block extra_js %}
+<script>
+// Функция поиска по ФИО
+function searchStudents() {
+    const searchTerm = document.getElementById('search-students').value.toLowerCase().trim();
+    const studentCards = document.querySelectorAll('.archived-card');
+    const noResultsDiv = document.getElementById('no-results');
+    let visibleCount = 0;
+
+    studentCards.forEach(card => {
+        const studentName = card.getAttribute('data-name');
+
+        if (searchTerm === '' || studentName.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Показываем/скрываем сообщение "Ничего не найдено"
+    if (visibleCount === 0 && searchTerm !== '') {
+        noResultsDiv.classList.add('show');
+    } else {
+        noResultsDiv.classList.remove('show');
+    }
+}
+
+// Добавляем обработчик события на поле поиска
+document.getElementById('search-students').addEventListener('input', searchStudents);
+</script>
+{% endblock %}
